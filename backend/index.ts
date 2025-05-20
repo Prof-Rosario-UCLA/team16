@@ -1,7 +1,7 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import gameRoutes from "./routes/roomRoutes";
+import gameRoutes from "./routes/gameRoutes";
 import { setupGameSocket } from "./sockets/gameSocket";
 
 const app = express();
@@ -14,9 +14,23 @@ app.get("/api/ping", (req: any, res: any) => {
 });
 
 // express routes
-app.use("/api/room", gameRoutes);
+app.use("/api/game", gameRoutes);
 
 // socket.io logic
+// auth
+io.use((socket, next) => {
+  socket.data.user = "ghtjason";
+  next();
+
+  // TODO: auth logic below
+  // const token = socket.handshake.auth.token;
+  // if (token) {
+  //   // verify token logic here
+  //   next();
+  // } else {
+  //   next(new Error("Authentication error"));
+  // }
+});
 io.on("connection", (socket) => setupGameSocket(io, socket));
 
 // startup
