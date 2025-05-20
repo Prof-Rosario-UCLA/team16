@@ -1,12 +1,18 @@
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
 import gameRoutes from "./routes/gameRoutes";
+import cors from "cors";
+import { Server } from "socket.io";
 import { setupGameSocket } from "./sockets/gameSocket";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+
+const corsOptions = {
+  origin: "*", // change on deployment or rosario will be mad!
+};
+app.use(cors(corsOptions));
 
 // test route
 app.get("/api/ping", (req: any, res: any) => {
@@ -34,7 +40,7 @@ io.use((socket, next) => {
 io.on("connection", (socket) => setupGameSocket(io, socket));
 
 // startup
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`listening on ${PORT}`);
 });

@@ -6,7 +6,7 @@ const generateId = customAlphabet("1234567890abcdef", 6);
 
 router.post("/", (req, res) => {
   // create game logic here
-  res.json({ gameId: generateId() });
+  res.json({ id: generateId() });
 });
 
 export default router;
