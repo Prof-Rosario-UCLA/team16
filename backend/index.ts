@@ -1,9 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from "express";
 import http from "http";
 import gameRoutes from "./routes/gameRoutes";
+import testRoutes from "./routes/testRoutes";
 import cors from "cors";
 import { Server } from "socket.io";
 import { setupGameSocket } from "./sockets/gameSocket";
+import { connectToMongoDB } from "./utils/dbconfig";
 
 const app = express();
 const server = http.createServer(app);
@@ -21,6 +26,7 @@ app.get("/api/ping", (req: any, res: any) => {
 
 // express routes
 app.use("/api/game", gameRoutes);
+app.use("/api/test", testRoutes);
 
 // socket.io logic
 // auth
@@ -40,7 +46,15 @@ io.use((socket, next) => {
 io.on("connection", (socket) => setupGameSocket(io, socket));
 
 // startup
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`listening on ${PORT}`);
+const main = async() => {
+  await connectToMongoDB();
+
+  const PORT = process.env.PORT;
+  server.listen(PORT, () => {
+    console.log(`listening on ${PORT}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("Failed to start server:", err);
 });
