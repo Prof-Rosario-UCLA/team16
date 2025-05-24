@@ -8,14 +8,44 @@ export type Point = {
   y: number;
 };
 
-export type Line = Point[];
+export type Line = {
+  points: Point[];
+  color?: string;
+  width?: number;
+};
 
 const VIEWBOX_WIDTH = 600;
 const VIEWBOX_HEIGHT = 400;
 
-export default function DrawArea() {
+interface DrawAreaProps {
+  onLineStart?: (line?: Line) => void;
+  onLineEnd?: (line?: Line) => void;
+  onLineUpdate?: (line: Line) => void;
+  incomingPaths?: Line[];
+  clearTrigger?: never; // change prop to trigger canvas clear
+  strokeColor?: string;
+  strokeWidth?: number;
+  erase?: boolean;
+}
+export default function DrawArea({
+  onLineStart: onStart,
+  onLineEnd: onEnd,
+  onLineUpdate: onUpdate,
+  incomingPaths = [],
+  clearTrigger,
+  strokeColor = "black",
+  strokeWidth = 6,
+  erase = false,
+}: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
+
+  const actualStrokeColor = erase ? "white" : strokeColor;
+
+  // clear canvas when clearTrigger changes
+  useEffect(() => {
+    setLines([]);
+  }, [clearTrigger]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -37,8 +67,16 @@ export default function DrawArea() {
 
     const point = getSvgCoords(mouseEvent);
 
-    setLines((prevLines) => [...prevLines, [point]]);
+    setLines((prevLines) => [
+      ...prevLines,
+      { points: [point], color: actualStrokeColor, width: strokeWidth },
+    ]);
     setIsDrawing(true);
+    onStart?.({
+      points: [point],
+      color: actualStrokeColor,
+      width: strokeWidth,
+    });
   };
 
   useEffect(() => {
@@ -59,7 +97,7 @@ export default function DrawArea() {
             const currentLine = newLines[newLines.length - 1];
 
             if (currentLine) {
-              const last = currentLine[currentLine.length - 1];
+              const last = currentLine.points[currentLine.points.length - 1];
               const dx = point.x - last.x;
               const dy = point.y - last.y;
               const dist2 = dx * dx + dy * dy;
@@ -72,7 +110,8 @@ export default function DrawArea() {
                 x: last.x * (1 - k) + point.x * k,
                 y: last.y * (1 - k) + point.y * k,
               };
-              currentLine.push(smoothed);
+              currentLine.points.push(smoothed);
+              onUpdate?.(currentLine);
             }
 
             return newLines;
@@ -86,6 +125,10 @@ export default function DrawArea() {
     const handleMouseUp = (mouseEvent: MouseEvent) => {
       handleMouseMove(mouseEvent);
       setIsDrawing(false);
+      const currentLine = lines[lines.length - 1];
+      if (currentLine) {
+        onEnd?.(currentLine);
+      }
     };
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -93,7 +136,7 @@ export default function DrawArea() {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDrawing]);
+  }, [isDrawing, lines, onEnd, onUpdate]);
 
   return (
     <div
@@ -105,7 +148,7 @@ export default function DrawArea() {
         ref={svgRef}
         onMouseDown={handleMouseDown}
       >
-        {lines.map((line, index) => (
+        {lines.concat(incomingPaths).map((line, index) => (
           <DrawingLine key={index} line={line} />
         ))}
       </svg>
