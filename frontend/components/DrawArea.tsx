@@ -1,13 +1,14 @@
 "use client";
 
+import { DrawingLine } from "@/components/DrawingLine";
 import { useEffect, useRef, useState } from "react";
 
-type Point = {
+export type Point = {
   x: number;
   y: number;
 };
 
-type Line = Point[];
+export type Line = Point[];
 
 const VIEWBOX_WIDTH = 600;
 const VIEWBOX_HEIGHT = 400;
@@ -18,9 +19,7 @@ export default function DrawArea() {
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  const relativeCoordinatesForEvent = (
-    mouseEvent: React.MouseEvent | MouseEvent
-  ) => {
+  const getSvgCoords = (mouseEvent: React.MouseEvent | MouseEvent) => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
 
@@ -33,28 +32,55 @@ export default function DrawArea() {
   };
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
-    const point = relativeCoordinatesForEvent(mouseEvent);
+    // only start on left click
+    if (mouseEvent.button !== 0) return;
+
+    const point = getSvgCoords(mouseEvent);
 
     setLines((prevLines) => [...prevLines, [point]]);
     setIsDrawing(true);
   };
 
   useEffect(() => {
+    let pending = false;
     const handleMouseMove = (mouseEvent: MouseEvent) => {
       if (!isDrawing) {
         return;
       }
+      if (!pending) {
+        pending = true;
+        const point = getSvgCoords(mouseEvent);
 
-      const point = relativeCoordinatesForEvent(mouseEvent);
+        // throttles path updates to at most once per frame
+        // at least, that's the intention
+        requestAnimationFrame(() => {
+          setLines((prevLines) => {
+            const newLines = [...prevLines];
+            const currentLine = newLines[newLines.length - 1];
 
-      setLines((prevLines) => {
-        const newLines = [...prevLines];
-        const currentLine = newLines[newLines.length - 1];
-        if (currentLine) {
-          currentLine.push(point);
-        }
-        return newLines;
-      });
+            if (currentLine) {
+              const last = currentLine[currentLine.length - 1];
+              const dx = point.x - last.x;
+              const dy = point.y - last.y;
+              const dist2 = dx * dx + dy * dy;
+
+              if (dist2 < 1) return newLines;
+
+              const k = 0.2; // weight given to new point, controls smoothing
+              // lower k lags behind more, higher k more responsive (but more)
+              const smoothed = {
+                x: last.x * (1 - k) + point.x * k,
+                y: last.y * (1 - k) + point.y * k,
+              };
+              currentLine.push(smoothed);
+            }
+
+            return newLines;
+          });
+
+          pending = false;
+        });
+      }
     };
 
     const handleMouseUp = (mouseEvent: MouseEvent) => {
@@ -86,29 +112,3 @@ export default function DrawArea() {
     </div>
   );
 }
-
-// const Drawing = ({ lines }: { lines: Line[] }) => {
-//   return (
-//     <svg
-//       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-//       className="border w-full h-full"
-//     >
-//       {lines.map((line, index) => (
-//         <DrawingLine key={index} line={line} />
-//       ))}
-//     </svg>
-//   );
-// };
-
-const DrawingLine = ({ line }: { line: Line }) => {
-  const pathData = "M " + line.map((p) => `${p.x} ${p.y}`).join(" L ");
-  return (
-    <path
-      d={pathData}
-      stroke="black"
-      strokeWidth={6}
-      strokeLinecap="round"
-      fill="none"
-    />
-  );
-};
