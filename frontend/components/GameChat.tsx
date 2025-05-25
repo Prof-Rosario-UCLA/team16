@@ -37,7 +37,7 @@ export default function GameChat() {
   }, [socket]);
 
   return (
-    <div className="flex flex-col h-[500px] w-[400px]">
+    <div className="flex flex-col h-[800px] w-[400px]">
       <div className="flex-grow overflow-y-auto flex flex-col-reverse p-4 gap-2">
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>

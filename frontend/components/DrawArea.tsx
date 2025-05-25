@@ -162,14 +162,12 @@ export default function DrawArea({
   }, [isDrawing, lines, onEnd, onUpdate]);
 
   return (
-    <div
-      className={`border aspect-[${VIEWBOX_WIDTH}/${VIEWBOX_HEIGHT}] w-full`}
-    >
+    <div className={`border aspect-[3/2] h-auto w-full max-w-[100vh]`}>
       <svg
         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-        className="w-full h-full"
         ref={svgRef}
         onMouseDown={handleMouseDown}
+        className="w-full h-full border"
       >
         {lines.concat(incomingPaths).map((line, index) => (
           <DrawingLine key={index} line={line} />

@@ -17,17 +17,17 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [socket, gameId]);
 
   return (
-    <div className="flex flex-row items-center justify-center w-full h-screen px-32 py-32">
-      <div className="w-full h-full flex flex-col">
+    <div className="flex flex-row items-center justify-center px-32 py-32 h-[100vh]">
+      <div className=" w-full max-w-[100vh] gap-4 flex flex-col items-center justify-center">
         <DrawArea ref={ref} />
         <button
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           onClick={ref.current?.exportDrawing}
         >
           Export Drawing
         </button>
       </div>
-      <div className="flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center flex-1 justify-center">
         <GameChat />
         <div className="mt-4">
           Connection Status:{" "}
