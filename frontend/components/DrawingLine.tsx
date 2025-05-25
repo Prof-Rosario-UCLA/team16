@@ -70,6 +70,14 @@ const generateBezier = (
   return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
 };
 
+export const pointsToPath = (points: Point[], smoothing: number) => {
+  return points.reduce((acc, point, i, arr) => {
+    if (i === 0) {
+      return `M ${point.x},${point.y}`;
+    }
+    return acc + " " + generateBezier(point, i, arr, smoothing);
+  }, "");
+};
 // render a smooth bezier line through an array of points
 
 interface DrawingLineProps {
@@ -83,18 +91,13 @@ export const DrawingLine = ({
 }: DrawingLineProps) => {
   if (line.points.length === 0) return null;
 
-  const pathData = line.points.reduce((acc, point, i, arr) => {
-    if (i === 0) {
-      return `M ${point.x},${point.y}`;
-    }
-    return acc + " " + generateBezier(point, i, arr, smoothing);
-  }, "");
+  const pathData = pointsToPath(line.points, smoothing);
 
   return (
     <path
       d={pathData}
-      stroke={line.color || "black"}
-      strokeWidth={line.width || 6}
+      stroke={line.color}
+      strokeWidth={line.width}
       strokeLinecap="round"
       fill="none"
     />

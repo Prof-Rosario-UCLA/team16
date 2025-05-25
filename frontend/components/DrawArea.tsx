@@ -1,6 +1,7 @@
 "use client";
 
-import { DrawingLine } from "@/components/DrawingLine";
+import { useImperativeHandle } from "react";
+import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
 import { useEffect, useRef, useState } from "react";
 
 export type Point = {
@@ -10,8 +11,13 @@ export type Point = {
 
 export type Line = {
   points: Point[];
-  color?: string;
-  width?: number;
+  color: string;
+  width: number;
+};
+
+export type DrawAreaRef = {
+  clear: () => void;
+  exportDrawing: () => void;
 };
 
 const VIEWBOX_WIDTH = 600;
@@ -26,7 +32,9 @@ interface DrawAreaProps {
   strokeColor?: string;
   strokeWidth?: number;
   erase?: boolean;
+  ref?: React.ForwardedRef<DrawAreaRef>;
 }
+
 export default function DrawArea({
   onLineStart: onStart,
   onLineEnd: onEnd,
@@ -36,9 +44,24 @@ export default function DrawArea({
   strokeColor = "black",
   strokeWidth = 6,
   erase = false,
+  ref,
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
+
+  const linesRef = useRef<Line[]>(lines);
+  linesRef.current = lines; // useImperativeHandle does not get updated lines without this
+  // expose clear and exportDrawing methods to parent component
+  useImperativeHandle(
+    ref,
+    () => {
+      return {
+        clear: () => setLines([]),
+        exportDrawing: () => exportDrawing(linesRef.current),
+      };
+    },
+    [linesRef]
+  );
 
   const actualStrokeColor = erase ? "white" : strokeColor;
 
@@ -104,7 +127,7 @@ export default function DrawArea({
 
               if (dist2 < 1) return newLines;
 
-              const k = 0.2; // weight given to new point, controls smoothing
+              const k = 0.25; // weight given to new point, controls smoothing
               // lower k lags behind more, higher k more responsive (but more)
               const smoothed = {
                 x: last.x * (1 - k) + point.x * k,
@@ -155,3 +178,34 @@ export default function DrawArea({
     </div>
   );
 }
+
+const exportDrawing = (lines: Line[]) => {
+  const scale = 3;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = VIEWBOX_WIDTH * scale;
+  canvas.height = VIEWBOX_HEIGHT * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(scale, scale); // scale so we're still in the same coordinate system
+
+  ctx.lineCap = "round";
+  lines.forEach((line) => {
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = line.width;
+    ctx.beginPath();
+    const path = new Path2D();
+    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+    ctx.stroke(path);
+  });
+  console.log("Exporting drawing...");
+  console.log("Lines:", lines);
+  const img = new Image();
+  img.src = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = img.src;
+  link.download = "drawing.png";
+  link.click();
+};

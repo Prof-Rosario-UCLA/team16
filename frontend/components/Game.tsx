@@ -1,11 +1,12 @@
-import DrawArea from "@/components/DrawArea";
+import DrawArea, { DrawAreaRef } from "@/components/DrawArea";
 import GameChat from "@/components/GameChat";
 import { useSocketContext } from "@/contexts/SocketContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
   const [joined, setJoined] = useState(false);
+  const ref = useRef<DrawAreaRef>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -17,7 +18,15 @@ export default function Game({ gameId }: { gameId: string }) {
 
   return (
     <div className="flex flex-row items-center justify-center w-full h-screen px-32 py-32">
-      <DrawArea />
+      <div className="w-full h-full flex flex-col">
+        <DrawArea ref={ref} />
+        <button
+          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={ref.current?.exportDrawing}
+        >
+          Export Drawing
+        </button>
+      </div>
       <div className="flex flex-col items-center justify-center">
         <GameChat />
         <div className="mt-4">
