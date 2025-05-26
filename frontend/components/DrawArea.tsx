@@ -1,8 +1,28 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useImperativeHandle } from "react";
+import { memo } from "react";
 import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
 import { useEffect, useRef, useState } from "react";
+
+const brushSizes = [4, 10, 20];
+const colorPalette = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#eab308",
+  "#84cc16",
+  "#22c55e",
+  "#10b981",
+  "#14b8a6",
+  "#06b6d4",
+  "#0ea5e9",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#a855f7",
+  "black",
+];
 
 export type Point = {
   x: number;
@@ -20,8 +40,8 @@ export type DrawAreaRef = {
   exportDrawing: () => void;
 };
 
-const VIEWBOX_WIDTH = 600;
-const VIEWBOX_HEIGHT = 400;
+const VIEWBOX_WIDTH = 400;
+const VIEWBOX_HEIGHT = 300;
 
 interface DrawAreaProps {
   onLineStart?: (line?: Line) => void;
@@ -32,7 +52,6 @@ interface DrawAreaProps {
   strokeColor?: string;
   strokeWidth?: number;
   erase?: boolean;
-  ref?: React.ForwardedRef<DrawAreaRef>;
 }
 
 export default function DrawArea({
@@ -41,27 +60,12 @@ export default function DrawArea({
   onLineUpdate: onUpdate,
   incomingPaths = [],
   clearTrigger,
-  strokeColor = "black",
-  strokeWidth = 6,
-  erase = false,
-  ref,
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
-
-  const linesRef = useRef<Line[]>(lines);
-  linesRef.current = lines; // useImperativeHandle does not get updated lines without this
-  // expose clear and exportDrawing methods to parent component
-  useImperativeHandle(
-    ref,
-    () => {
-      return {
-        clear: () => setLines([]),
-        exportDrawing: () => exportDrawing(linesRef.current),
-      };
-    },
-    [linesRef]
-  );
+  const [erase, setErase] = useState(false);
+  const [strokeColor, setStrokeColor] = useState("black");
+  const [strokeWidth, setStrokeWidth] = useState(brushSizes[0]);
 
   const actualStrokeColor = erase ? "white" : strokeColor;
 
@@ -116,26 +120,33 @@ export default function DrawArea({
         // at least, that's the intention
         requestAnimationFrame(() => {
           setLines((prevLines) => {
-            const newLines = [...prevLines];
-            const currentLine = newLines[newLines.length - 1];
+            if (prevLines.length === 0) return prevLines;
 
-            if (currentLine) {
-              const last = currentLine.points[currentLine.points.length - 1];
-              const dx = point.x - last.x;
-              const dy = point.y - last.y;
-              const dist2 = dx * dx + dy * dy;
+            const lastLine = prevLines[prevLines.length - 1];
+            const last = lastLine.points[lastLine.points.length - 1];
+            const dx = point.x - last.x;
+            const dy = point.y - last.y;
+            const dist2 = dx * dx + dy * dy;
 
-              if (dist2 < 1) return newLines;
+            if (dist2 < 1) return prevLines;
 
-              const k = 0.25; // weight given to new point, controls smoothing
-              // lower k lags behind more, higher k more responsive (but more)
-              const smoothed = {
-                x: last.x * (1 - k) + point.x * k,
-                y: last.y * (1 - k) + point.y * k,
-              };
-              currentLine.points.push(smoothed);
-              onUpdate?.(currentLine);
-            }
+            const k = 0.25;
+            const smoothed = {
+              x: last.x * (1 - k) + point.x * k,
+              y: last.y * (1 - k) + point.y * k,
+            };
+
+            const updatedLine = {
+              ...lastLine,
+              points: [...lastLine.points, smoothed],
+            };
+
+            const newLines = [
+              ...prevLines.slice(0, prevLines.length - 1),
+              updatedLine,
+            ];
+
+            onUpdate?.(updatedLine);
 
             return newLines;
           });
@@ -162,20 +173,132 @@ export default function DrawArea({
   }, [isDrawing, lines, onEnd, onUpdate]);
 
   return (
-    <div className={`border aspect-[3/2] h-auto w-full max-w-[100vh]`}>
+    <div
+      className={`!p-0 nes-container h-full w-auto relative`}
+      style={{
+        aspectRatio: `${VIEWBOX_WIDTH}/${VIEWBOX_HEIGHT}`,
+      }}
+    >
       <svg
         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
         ref={svgRef}
         onMouseDown={handleMouseDown}
-        className="w-full h-full border"
+        preserveAspectRatio="xMidYMid meet"
+        width="100%"
+        height="100%"
+        className="bg-white"
       >
         {lines.concat(incomingPaths).map((line, index) => (
           <DrawingLine key={index} line={line} />
         ))}
       </svg>
+      <DrawAreaControls
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        erase={erase}
+        setStrokeColor={setStrokeColor}
+        setStrokeWidth={setStrokeWidth}
+        setErase={setErase}
+        clear={() => setLines([])}
+      />
+      {/* download */}
+      <div className="absolute bottom-[-4.5em] right-0 text-xs">
+        <button
+          className="nes-btn is-success"
+          onClick={() => exportDrawing(lines.concat(incomingPaths))}
+        >
+          Download as PNG
+        </button>
+      </div>
     </div>
   );
 }
+
+interface DrawAreaControlsProps {
+  strokeColor: string;
+  strokeWidth: number;
+  erase: boolean;
+  setStrokeColor: (color: string) => void;
+  setStrokeWidth: (width: number) => void;
+  setErase: (erase: boolean) => void;
+  clear: () => void;
+}
+
+const DrawAreaControls = memo(
+  ({
+    strokeColor,
+    strokeWidth,
+    erase,
+    setStrokeColor,
+    setStrokeWidth,
+    setErase,
+    clear,
+  }: DrawAreaControlsProps) => (
+    <>
+      {/* color palette */}
+      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4">
+        {colorPalette.map((color) => (
+          <button
+            key={color}
+            className={`border-4 ${
+              color === strokeColor ? "w-6 h-6" : "w-8 h-8"
+            }`}
+            style={{ backgroundColor: color }}
+            onClick={() => {
+              setStrokeColor(color);
+              setErase(false);
+            }}
+          />
+        ))}
+      </div>
+
+      {/* tool toggle */}
+      <div className="flex flex-col absolute top-0 right-0 p-4 gap-2">
+        <button
+          onClick={() => setErase(false)}
+          className={`size-8 ${erase ? "opacity-20" : ""}`}
+        >
+          <img src="/brush.png" alt="Brush" />
+        </button>
+        <button
+          onClick={() => setErase(true)}
+          className={`size-8 ${!erase ? "opacity-20" : ""}`}
+        >
+          <img src="/eraser.png" alt="Eraser" />
+        </button>
+      </div>
+
+      {/* stroke width */}
+      <div className="flex flex-col absolute right-0 top-1/2 -translate-y-1/2 p-4">
+        {brushSizes.map((size, i) => (
+          <button
+            key={size}
+            onClick={() => setStrokeWidth(size)}
+            className={`flex items-center justify-center py-2 ${
+              strokeWidth !== size ? "opacity-50" : ""
+            }`}
+          >
+            <img
+              src="/circle.png"
+              alt={`${size}px brush`}
+              style={{
+                width: (i + 1) * 12,
+                height: (i + 1) * 12,
+                imageRendering: "pixelated",
+              }}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* clear */}
+      <button className="absolute bottom-0 right-0 p-2" onClick={clear}>
+        <img src="/trash.png" alt="Clear" className="size-8" />
+      </button>
+    </>
+  )
+);
+DrawAreaControls.displayName = "DrawAreaControls";
 
 const exportDrawing = (lines: Line[]) => {
   const scale = 3;
@@ -198,8 +321,6 @@ const exportDrawing = (lines: Line[]) => {
     path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
     ctx.stroke(path);
   });
-  console.log("Exporting drawing...");
-  console.log("Lines:", lines);
   const img = new Image();
   img.src = canvas.toDataURL("image/png");
   const link = document.createElement("a");

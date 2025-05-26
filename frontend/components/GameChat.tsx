@@ -37,22 +37,22 @@ export default function GameChat() {
   }, [socket]);
 
   return (
-    <div className="flex flex-col h-[800px] w-[400px]">
-      <div className="flex-grow overflow-y-auto flex flex-col-reverse p-4 gap-2">
+    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs">
+      <div className="!p-4 flex-grow overflow-y-auto flex flex-col-reverse gap-2 nes-container bg-white">
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>
         ) : (
           messages.map((message, index) => (
             <div key={index}>
               {message.user && (
-                <span className="font-bold">{`${message.user}: `}</span>
+                <span className="nes-text is-success">{`${message.user} `}</span>
               )}
               <span>{message.message}</span>
             </div>
           ))
         )}
       </div>
-      <div className="p-4">
+      <div>
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -67,13 +67,10 @@ export default function GameChat() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-grow p-2 border "
-            placeholder="Type a message..."
+            className="flex-grow nes-input focus:outline-none bg-white"
+            placeholder="Take a guess!"
           />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 cursor-pointer"
-          >
+          <button type="submit" className="nes-btn is-primary">
             Send
           </button>
         </form>

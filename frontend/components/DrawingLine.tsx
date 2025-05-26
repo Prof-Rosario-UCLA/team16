@@ -1,4 +1,5 @@
 import { Point, Line } from "@/components/DrawArea";
+import React, { memo } from "react";
 
 //
 // MATH IS BASICALLY STRAIGHT FROM
@@ -85,21 +86,24 @@ interface DrawingLineProps {
   smoothing?: number;
 }
 
-export const DrawingLine = ({
-  line,
-  smoothing = 0.2, // default smoothing factor
-}: DrawingLineProps) => {
-  if (line.points.length === 0) return null;
+export const DrawingLine = memo(
+  ({
+    line,
+    smoothing = 0.2, // default smoothing factor
+  }: DrawingLineProps) => {
+    if (line.points.length === 0) return null;
 
-  const pathData = pointsToPath(line.points, smoothing);
+    const pathData = pointsToPath(line.points, smoothing);
 
-  return (
-    <path
-      d={pathData}
-      stroke={line.color}
-      strokeWidth={line.width}
-      strokeLinecap="round"
-      fill="none"
-    />
-  );
-};
+    return (
+      <path
+        d={pathData}
+        strokeWidth={line.width}
+        strokeLinecap="round"
+        fill="none"
+        stroke={line.color}
+      />
+    );
+  }
+);
+DrawingLine.displayName = "DrawingLine";

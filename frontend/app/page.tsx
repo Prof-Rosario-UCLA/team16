@@ -14,7 +14,7 @@ export default function Home() {
     <div className="flex items-center justify-center w-full h-screen">
       <button
         type="button"
-        className="px-4 py-2 text-white bg-blue-500 rounded"
+        className="nes-btn is-primary"
         onClick={handleCreateGame}
       >
         Create Game
