@@ -5,6 +5,7 @@ import express from "express";
 import http from "http";
 import gameRoutes from "./routes/gameRoutes";
 import testRoutes from "./routes/testRoutes";
+import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { Server } from "socket.io";
 import { setupGameSocket } from "./sockets/gameSocket";
@@ -18,6 +19,7 @@ const corsOptions = {
   origin: "*", // change on deployment or rosario will be mad!
 };
 app.use(cors(corsOptions));
+app.use(express.json());
 
 // test route
 app.get("/api/ping", (req: any, res: any) => {
@@ -27,6 +29,7 @@ app.get("/api/ping", (req: any, res: any) => {
 // express routes
 app.use("/api/game", gameRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api/user", userRoutes);
 
 // socket.io logic
 // auth

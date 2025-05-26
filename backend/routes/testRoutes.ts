@@ -1,12 +1,8 @@
 import { Router } from "express";
-import { Test } from "../models/testModel";
+import * as testController from "../controllers/testController";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
-  // create game logic here
-  const test = await Test.findOne({});
-  res.json(test);
-});
+router.get("/", testController.getTest);
 
 export default router;
