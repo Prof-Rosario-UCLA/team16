@@ -4,6 +4,9 @@
 import { memo } from "react";
 import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
 import { useEffect, useRef, useState } from "react";
+import { customAlphabet } from "nanoid";
+
+const generateId = customAlphabet("1234567890abcdef", 6);
 
 const brushSizes = [4, 10, 20];
 const colorPalette = [
@@ -33,6 +36,7 @@ export type Line = {
   points: Point[];
   color: string;
   width: number;
+  id: string;
 };
 
 export type DrawAreaRef = {
@@ -44,36 +48,29 @@ const VIEWBOX_WIDTH = 400;
 const VIEWBOX_HEIGHT = 300;
 
 interface DrawAreaProps {
-  onLineStart?: (line?: Line) => void;
-  onLineEnd?: (line?: Line) => void;
+  onLineStart?: (line: Line) => void;
+  onLineEnd?: (line: Line) => void;
   onLineUpdate?: (line: Line) => void;
-  incomingPaths?: Line[];
-  clearTrigger?: never; // change prop to trigger canvas clear
-  strokeColor?: string;
-  strokeWidth?: number;
-  erase?: boolean;
+  onClear?: () => void;
+  globalLines?: Line[];
+  pruneLocalTrigger?: boolean;
 }
 
 export default function DrawArea({
-  onLineStart: onStart,
-  onLineEnd: onEnd,
-  onLineUpdate: onUpdate,
-  incomingPaths = [],
-  clearTrigger,
+  onLineStart,
+  onLineEnd,
+  onLineUpdate,
+  onClear,
+  globalLines = [],
+  pruneLocalTrigger = false,
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
-  const [lines, setLines] = useState<Line[]>([]);
+  const [localLines, setLocalLines] = useState<Line[]>([]);
   const [erase, setErase] = useState(false);
   const [strokeColor, setStrokeColor] = useState("black");
   const [strokeWidth, setStrokeWidth] = useState(brushSizes[0]);
 
   const actualStrokeColor = erase ? "white" : strokeColor;
-
-  // clear canvas when clearTrigger changes
-  useEffect(() => {
-    setLines([]);
-  }, [clearTrigger]);
-
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const getSvgCoords = (mouseEvent: React.MouseEvent | MouseEvent) => {
@@ -85,25 +82,36 @@ export default function DrawArea({
     pt.y = mouseEvent.clientY;
 
     const svgPoint = pt.matrixTransform(svg.getScreenCTM()?.inverse());
-    return { x: svgPoint.x, y: svgPoint.y };
+    return {
+      x: Math.round(svgPoint.x * 100) / 100,
+      y: Math.round(svgPoint.y * 100) / 100,
+    };
   };
+
+  useEffect(() => {
+    setLocalLines((prevLines) => {
+      if (prevLines.length === 0) return prevLines;
+      // prune oldest line
+      console.log("Pruning local lines");
+      return prevLines.slice(1, prevLines.length);
+    });
+  }, [pruneLocalTrigger]);
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
     // only start on left click
     if (mouseEvent.button !== 0) return;
 
     const point = getSvgCoords(mouseEvent);
-
-    setLines((prevLines) => [
-      ...prevLines,
-      { points: [point], color: actualStrokeColor, width: strokeWidth },
-    ]);
-    setIsDrawing(true);
-    onStart?.({
+    const newLine: Line = {
       points: [point],
       color: actualStrokeColor,
       width: strokeWidth,
-    });
+      id: generateId(),
+    };
+
+    setLocalLines((prevLines) => [...prevLines, newLine]);
+    setIsDrawing(true);
+    onLineStart?.(newLine);
   };
 
   useEffect(() => {
@@ -112,6 +120,7 @@ export default function DrawArea({
       if (!isDrawing) {
         return;
       }
+
       if (!pending) {
         pending = true;
         const point = getSvgCoords(mouseEvent);
@@ -119,7 +128,7 @@ export default function DrawArea({
         // throttles path updates to at most once per frame
         // at least, that's the intention
         requestAnimationFrame(() => {
-          setLines((prevLines) => {
+          setLocalLines((prevLines) => {
             if (prevLines.length === 0) return prevLines;
 
             const lastLine = prevLines[prevLines.length - 1];
@@ -146,7 +155,7 @@ export default function DrawArea({
               updatedLine,
             ];
 
-            onUpdate?.(updatedLine);
+            onLineUpdate?.(updatedLine);
 
             return newLines;
           });
@@ -159,9 +168,9 @@ export default function DrawArea({
     const handleMouseUp = (mouseEvent: MouseEvent) => {
       handleMouseMove(mouseEvent);
       setIsDrawing(false);
-      const currentLine = lines[lines.length - 1];
+      const currentLine = localLines[localLines.length - 1];
       if (currentLine) {
-        onEnd?.(currentLine);
+        onLineEnd?.(currentLine);
       }
     };
     document.addEventListener("mousemove", handleMouseMove);
@@ -170,12 +179,13 @@ export default function DrawArea({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDrawing, lines, onEnd, onUpdate]);
+  }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
 
   return (
     <div
-      className={`!p-0 nes-container h-full w-auto relative`}
+      className={`nes-container h-full w-auto relative`}
       style={{
+        padding: 0,
         aspectRatio: `${VIEWBOX_WIDTH}/${VIEWBOX_HEIGHT}`,
       }}
     >
@@ -188,8 +198,8 @@ export default function DrawArea({
         height="100%"
         className="bg-white"
       >
-        {lines.concat(incomingPaths).map((line, index) => (
-          <DrawingLine key={index} line={line} />
+        {globalLines.concat(localLines).map((line) => (
+          <DrawingLine key={line.id} line={line} />
         ))}
       </svg>
       <DrawAreaControls
@@ -199,13 +209,16 @@ export default function DrawArea({
         setStrokeColor={setStrokeColor}
         setStrokeWidth={setStrokeWidth}
         setErase={setErase}
-        clear={() => setLines([])}
+        clear={() => {
+          setLocalLines([]);
+          onClear?.();
+        }}
       />
       {/* download */}
       <div className="absolute bottom-[-4.5em] right-0 text-xs">
         <button
           className="nes-btn is-success"
-          onClick={() => exportDrawing(lines.concat(incomingPaths))}
+          onClick={() => exportDrawing(globalLines.concat(localLines))}
         >
           Download as PNG
         </button>

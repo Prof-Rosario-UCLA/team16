@@ -1,7 +1,7 @@
-import DrawArea, { DrawAreaRef } from "@/components/DrawArea";
+import DrawAreaSockets from "@/components/DrawAreaSockets";
 import GameChat from "@/components/GameChat";
 import { useSocketContext } from "@/contexts/SocketContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Player = {
   name: string;
@@ -49,7 +49,7 @@ export default function Game({ gameId }: { gameId: string }) {
           Export Drawing
           </button> */}
 
-      <DrawArea />
+      <DrawAreaSockets />
 
       <div className="h-full flex min-w-80">
         <GameChat />

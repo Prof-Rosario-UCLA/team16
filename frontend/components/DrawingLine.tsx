@@ -68,7 +68,11 @@ const generateBezier = (
     true,
     smoothing
   );
-  return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
+  return `C ${Math.round(cps.x * 100) / 100},${Math.round(cps.y * 100) / 100} ${
+    Math.round(cpe.x * 100) / 100
+  },${Math.round(cpe.y * 100) / 100} ${Math.round(point.x * 100) / 100},${
+    Math.round(point.y * 100) / 100
+  }`;
 };
 
 export const pointsToPath = (points: Point[], smoothing: number) => {
