@@ -10,6 +10,7 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { setupGameSocket } from "./sockets/gameSocket";
 import { connectToMongoDB } from "./utils/dbconfig";
+import { verifyToken } from "./utils/auth";
 
 const app = express();
 const server = http.createServer(app);
@@ -26,10 +27,13 @@ app.get("/api/ping", (req: any, res: any) => {
   res.send("pong");
 });
 
+app.use("/api/user", userRoutes);
+
+app.use(verifyToken); // apply auth middleware to all routes below this line
+
 // express routes
 app.use("/api/game", gameRoutes);
 app.use("/api/test", testRoutes);
-app.use("/api/user", userRoutes);
 
 // socket.io logic
 // auth
