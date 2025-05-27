@@ -1,12 +1,8 @@
 import { Router } from "express";
-import { customAlphabet } from "nanoid";
+import * as gameController from "../controllers/gameController";
 
 const router = Router();
-const generateId = customAlphabet("1234567890abcdef", 6);
 
-router.post("/", (req, res) => {
-  // create game logic here
-  res.json({ id: generateId() });
-});
+router.post("/", gameController.generateGame);
 
 export default router;

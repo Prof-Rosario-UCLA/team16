@@ -3,15 +3,21 @@
   "version": "0.0.1",
   "description": "my first socket.io app! wowee",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.0",
     "nanoid": "^5.1.5",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.19",
     "@types/socket.io": "^3.0.1",
     "tsc-watch": "^6.3.1",
