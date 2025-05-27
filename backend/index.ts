@@ -5,6 +5,7 @@ import express from "express";
 import http from "http";
 import gameRoutes from "./routes/gameRoutes";
 import testRoutes from "./routes/testRoutes";
+import loginRoutes from "./routes/loginRoutes";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { Server } from "socket.io";
@@ -18,8 +19,10 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const corsOptions = {
-  origin: "*", // change on deployment or rosario will be mad!
+  origin: "http://localhost:3000", // change on deployment
+  credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,11 +32,12 @@ app.use((err: any, req: any, res: any, next: any) => {
   res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
 });
 
-app.use("/api/user", userRoutes);
+app.use("/api/login", loginRoutes);
 
 app.use(verifyToken); // apply auth middleware to all routes below this line
 
 // express routes
+app.use("/api/user", userRoutes);
 app.use("/api/game", gameRoutes);
 app.use("/api/test", testRoutes);
 

@@ -1,0 +1,87 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setError(false);
+      setSuccess(false);
+
+      const res = await axios.post(
+        "http://localhost:3001/api/login/session",
+        { username, password },
+        { withCredentials: true }
+      );
+
+      if (res.status !== 200) {
+        setError(true);
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => router.push("/"), 1000); // Redirect after short delay
+    } catch (err) {
+      setError(true);
+      console.error("Login failed", err);
+    }
+
+    console.log("Submitted", { username, password });
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-screen gap-6">
+      <h1 className="text-2xl font-bold">Login Page</h1>
+
+      {error && (
+        <div className="w-80 p-3 text-sm text-red-700 bg-red-100 border border-red-400 rounded">
+          Login failed. Please check your username and password.
+        </div>
+      )}
+
+      {success && (
+        <div className="w-80 p-3 text-sm text-green-700 bg-green-100 border border-green-400 rounded">
+          Logged in successfully! Redirecting...
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="nes-input"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="nes-input"
+          required
+        />
+        <button type="submit" className="nes-btn is-primary">
+          Login
+        </button>
+      </form>
+
+      <p>
+        New user?{" "}
+        <a href="/register" className="text-blue-600 underline">
+          Register here
+        </a>
+      </p>
+    </div>
+  );
+}
