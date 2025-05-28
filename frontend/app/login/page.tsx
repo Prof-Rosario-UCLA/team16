@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { useUser } from "@/contexts/UserContext";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,9 +85,9 @@ export default function LoginPage() {
 
       <p>
         New user?{" "}
-        <a href="/register" className="text-blue-600 underline">
+        <Link href="/register" className="text-blue-600 underline">
           Register here
-        </a>
+        </Link>
       </p>
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
 
 export const metadata: Metadata = {
   title: "Doodly",
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${pressStart2P.variable} antialiased`}>
         <UserProvider>
+          <ClientNavbarWrapper />
           {children}
         </UserProvider>
       </body>
