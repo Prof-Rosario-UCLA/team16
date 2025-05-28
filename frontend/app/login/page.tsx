@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { fetchUser } = useUser();
+  const { fetchUser } = useUser() ?? {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -9,7 +9,7 @@ interface UserContextType {
   fetchUser: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType|null>(null);
+const UserContext = createContext<UserContextType | null>(null);
 
 interface UserProviderProps {
   children: React.ReactNode;

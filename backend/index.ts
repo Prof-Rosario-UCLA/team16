@@ -13,10 +13,13 @@ import { setupGameSocket } from "./sockets/gameSocket";
 import { connectToMongoDB } from "./utils/dbconfig";
 import { verifyToken } from "./utils/auth";
 import cookieParser from "cookie-parser";
+import * as cookie from "cookie";
+import jwt from "jsonwebtoken";
+
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "http://localhost:3000", credentials: true } });
 
 const corsOptions = {
   origin: "http://localhost:3000", // change on deployment
@@ -44,18 +47,44 @@ app.use("/api/test", testRoutes);
 // socket.io logic
 // auth
 io.use((socket, next) => {
-  socket.data.user = "ghtjason";
-  next();
+  // socket.data.user = "ghtjason";
+  // next();
 
-  // TODO: auth logic below
-  // const token = socket.handshake.auth.token;
-  // if (token) {
-  //   // verify token logic here
-  //   next();
-  // } else {
-  //   next(new Error("Authentication error"));
-  // }
+  const cookieHeader = socket.handshake.headers.cookie;
+  if (!cookieHeader) {
+    return next(new Error("No cookies found"));
+  }
+
+  const parsedCookies = cookie.parse(cookieHeader);
+  const filteredCookies: { [key: string]: string } = {};
+  for (const [key, value] of Object.entries(parsedCookies)) {
+    if (typeof value === "string") {
+      filteredCookies[key] = value;
+    }
+  }
+
+  const cookies = cookieParser.signedCookies(filteredCookies, process.env.COOKIE_SECRET || 'default');
+  const token = cookies.token;
+  if (!token) {
+    return next(new Error("Token not found or invalid"));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    if (typeof decoded === "object" && decoded !== null && "username" in decoded) {
+      socket.data.user = (decoded as jwt.JwtPayload).username;
+      console.log("Authenticated user:", socket.data.user);
+      next();
+    } else {
+      return next(new Error("Invalid token payload: username missing"));
+    }
+  }
+  catch (err) {
+    console.error("Token verification failed:", err);
+    next(new Error("Unauthorized: Invalid token"));
+  }
 });
+
 io.on("connection", (socket) => setupGameSocket(io, socket));
 
 // startup
