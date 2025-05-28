@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
+import { useUser } from "@/contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { fetchUser } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,10 @@ export default function LoginPage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/"), 1000); // Redirect after short delay
+
+      const redirectTo = searchParams.get("redirect") || "/";
+      await fetchUser?.();
+      setTimeout(() => router.push(redirectTo), 1000); // Redirect after short delay
     } catch (err) {
       setError(true);
       console.error("Login failed", err);

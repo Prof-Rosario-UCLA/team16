@@ -12,7 +12,10 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const newSocket = io("localhost:3001");
+    console.log("Connecting to socket.io server...");
+    const newSocket = io("localhost:3001", {
+      withCredentials: true,
+    });
     setSocket(newSocket);
     return () => {
       newSocket.disconnect();

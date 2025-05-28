@@ -7,9 +7,7 @@ import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
-  const userContext = useUser();
-  const user = userContext?.user;
-  const loading = userContext?.loading;
+  const { user, loading } = useUser() ?? {};
 
   useEffect(() => {
     if (!loading && !user) {

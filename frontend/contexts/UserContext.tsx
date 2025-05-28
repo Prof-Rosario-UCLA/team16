@@ -6,6 +6,7 @@ import axios from "axios";
 interface UserContextType {
   user: unknown; // Replace 'any' with a more specific type if available
   loading: boolean;
+  fetchUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType|null>(null);
@@ -18,20 +19,25 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // on app load, check if user is logged in
+  const fetchUser = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("http://localhost:3001/api/user/me", { withCredentials: true });
+      setUser(res.data);
+    } catch (err) {
+      console.warn("Not logged in:", err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/api/user/me", { withCredentials: true })
-      .then((res) => setUser(res.data))
-      .catch(((err) => {
-        console.warn("Not logged in:", err?.response?.data || err.message);
-        setUser(null);
-      }))
-      .finally(() => setLoading(false));
+    fetchUser();
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading }}>
+    <UserContext.Provider value={{ user, loading, fetchUser: fetchUser }}>
       {children}
     </UserContext.Provider>
   );
