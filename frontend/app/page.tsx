@@ -23,7 +23,7 @@ export default function Home() {
     router.push(`/game/${gameId}`);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center w-full h-screen">Loading...</div>;
 
   if (!user) return null; // Or a placeholder until redirect
 
