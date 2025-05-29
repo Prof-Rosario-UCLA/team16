@@ -3,6 +3,7 @@ import { Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "Doodly",
@@ -28,6 +29,9 @@ export default function RootLayout({
           <ClientNavbarWrapper />
           {children}
         </UserProvider>
+        <footer>
+          <CookieBanner />
+        </footer>
       </body>
     </html>
   );

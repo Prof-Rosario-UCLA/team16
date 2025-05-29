@@ -21,3 +21,7 @@ body {
 .nes-container {
   @apply p-4;
 }
+
+.nes-btn::after {
+  @apply pointer-events-none;
+}
