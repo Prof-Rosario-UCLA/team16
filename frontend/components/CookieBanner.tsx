@@ -29,6 +29,7 @@ export default function CookieBanner() {
       <button
         onClick={handleAccept}
         className="nes-btn bg-white text-gray-800 px-4 py-2 rounded font-semibold hover:bg-gray-200 transition"
+        aria-label="Accept cookies"
       >
         Accept
       </button>
