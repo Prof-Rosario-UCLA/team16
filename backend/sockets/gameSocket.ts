@@ -20,9 +20,13 @@ type LineUpdate = {
   id: string;
 };
 
-// js guarantees insertion order so this works!
-// global id to line
-const lines: Map<string, Line> = new Map();
+type GameState = {
+  // js guarantees insertion order so this works!
+  // global line id to line
+  lines: Map<string, Line>;
+};
+
+const games = new Map<string, GameState>();
 
 export function setupGameSocket(io: Server, socket: Socket) {
   // joining a game
@@ -32,6 +36,10 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     socket.data.lines = new Map<string, string>(); // client to global line ids
 
+    // create game state if it doesn't exist
+    if (!games.has(gameId)) {
+      games.set(gameId, { lines: new Map() });
+    }
     socket.join(gameId);
     io.to(gameId).emit("user_joined", { user: socket.data.user });
 
@@ -67,7 +75,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     };
 
     // store line in global state
-    lines.set(globalLine.id, globalLine);
+    games.get(socket.data.gameId)?.lines.set(globalLine.id, globalLine);
 
     // emit to everyone in game except sender
     socket.to(socket.data.gameId).emit("line_start", globalLine);
@@ -78,7 +86,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
   socket.on("line_update", (lineUpdate: LineUpdate) => {
     const existingLineId = socket.data.lines.get(lineUpdate.id);
-    const existingLine = lines.get(existingLineId);
+    const existingLine = games
+      .get(socket.data.gameId)
+      ?.lines.get(existingLineId);
     if (!existingLine) return;
 
     existingLine.points.push(...lineUpdate.newPoints);
@@ -91,7 +101,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
   socket.on("line_end", (line: Line) => {
     const existingLineId = socket.data.lines.get(line.id);
-    const existingLine = lines.get(existingLineId);
+    const existingLine = games
+      .get(socket.data.gameId)
+      ?.lines.get(existingLineId);
     if (!existingLine) return;
 
     existingLine.points = line.points;
@@ -101,7 +113,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
   socket.on("clear_lines", () => {
     console.log("Clearing lines for game", socket.data.gameId);
-    lines.clear();
+    games.get(socket.data.gameId)?.lines.clear();
     socket.to(socket.data.gameId).emit("clear_lines");
   });
 }
