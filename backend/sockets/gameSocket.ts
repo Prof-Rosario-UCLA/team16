@@ -20,10 +20,18 @@ type LineUpdate = {
   id: string;
 };
 
+type Player = {
+  name: string;
+  points: number;
+  isDrawing: boolean;
+};
+
 type GameState = {
   // js guarantees insertion order so this works!
   // global line id to line
+  id: String;
   lines: Map<string, Line>;
+  players: Player[];
 };
 
 const games = new Map<string, GameState>();
@@ -38,12 +46,43 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     // create game state if it doesn't exist
     if (!games.has(gameId)) {
-      games.set(gameId, { lines: new Map() });
+      games.set(gameId, {
+        id: gameId,
+        lines: new Map(),
+        players: [],
+      });
     }
+    
+    const game = games.get(gameId)!;
     socket.join(gameId);
-    io.to(gameId).emit("user_joined", { user: socket.data.user });
+
+    const playerExists = game.players.some(p => p.name === socket.data.user);
+    if (!playerExists) {
+      game.players.push({
+        name: socket.data.user,
+        points: 0,
+        isDrawing: false,
+      } as Player);
+    }
+
+    io.to(gameId).emit("user_joined", { user: socket.data.user, game: games.get(gameId) });
 
     if (cb) cb();
+  });
+
+  socket.on("start_game", () => {
+    const gameId = socket.data.gameId;
+    if (gameId) {
+      io.to(gameId).emit("game_started");
+      console.log(`Game ${gameId} started`);
+    }
+  });
+  socket.on("end_game", () => {
+    const gameId = socket.data.gameId;
+    if (gameId) {
+      io.to(gameId).emit("game_ended");
+      console.log(`Game ${gameId} ended`);
+    }
   });
 
   // chat
@@ -57,8 +96,18 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
   socket.on("disconnect", () => {
     // handle user disconnect
+    const gameId = socket.data.gameId;
+    const user = socket.data.user;
+    
+    if (!gameId || !games.has(gameId)) return;
+    const game = games.get(gameId)!;
+    
+    // remove player from game's player list
+    game.players = game.players.filter(p => p.name !== user);
+
     socket.to(socket.data.gameId).emit("user_left", {
       user: socket.data.user,
+      game: game
     });
     console.log("User disconnected", socket.data.user);
   });

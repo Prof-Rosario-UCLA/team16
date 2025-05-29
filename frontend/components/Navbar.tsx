@@ -25,7 +25,7 @@ export default function Navbar() {
   }
 
   return (
-    <div className="absolute inset-0 z-50 h-16 px-10 py-10 flex items-center justify-between">
+    <div className="absolute inset-0 z-50 h-16 px-10 pt-10 z-0 flex items-center justify-between">
       <Link href="/" className="font-bold hover:underline" style={{ color: 'black' }}>doodly</Link>
       <nav className="space-x-4 flex flex-row items-center">
         <Link href="/profile" className="hover:underline">Profile</Link>
