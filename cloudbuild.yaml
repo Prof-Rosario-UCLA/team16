@@ -28,7 +28,7 @@ availableSecrets:
       env: "USERNAME"
 
 images:
-  - "docker.io/ghtjason/doodly-repo:latest"
+  - "ghtjason/doodly-repo:latest"
 
 options:
   logging: CLOUD_LOGGING_ONLY
