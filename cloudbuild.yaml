@@ -16,8 +16,8 @@ steps:
 
   - name: "gcr.io/cloud-builders/kubectl"
     env:
-      - "CLOUDSDK_COMPUTE_REGION=<REGION>"
-      - "CLOUDSDK_CONTAINER_CLUSTER=<CLUSTER_NAME>"
+      - "CLOUDSDK_COMPUTE_REGION=us-west1-b"
+      - "CLOUDSDK_CONTAINER_CLUSTER=doodly-cluster"
     args: ["apply", "-f", "backend/k8s/"]
 
 availableSecrets:
