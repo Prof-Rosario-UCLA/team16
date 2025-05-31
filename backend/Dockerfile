@@ -11,8 +11,8 @@ COPY . .
 # build
 RUN npm run build
 
-# can't do this earlier because build needs dev dependencies
-ENV NODE_ENV=production
+# # can't do this earlier because build needs dev dependencies
+# ENV NODE_ENV=production
 
 EXPOSE 3001
 

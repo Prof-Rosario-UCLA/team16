@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doodly
+spec:
+  replicas: 1 # pods
+  selector:
+    matchLabels:
+      app: doodly
+  template:
+    metadata:
+      labels:
+        app: doodly
+    spec:
+      containers:
+        - name: doodly
+          image: docker.io/ghtjason/doodly-repo:latest
+          ports:
+            - containerPort: 3001 # port that container listens on
+# resources: # optional, for HPA
+#   requests:
+#     cpu: "500m"
+#   limits:
+#     cpu: "1000m" # 1 full core

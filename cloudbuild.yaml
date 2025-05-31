@@ -1,0 +1,31 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args: ["-c", "docker login --username=$$USERNAME --password=$$PASSWORD"]
+    secretEnv: ["USERNAME", "PASSWORD"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args: ["-c", "docker build -t $$USERNAME/doodly-repo:latest backend"]
+    secretEnv: ["USERNAME"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args: ["-c", "docker push $$USERNAME/doodly-repo:latest"]
+    secretEnv: ["USERNAME"]
+
+  - name: "gcr.io/cloud-builders/kubectl"
+    env:
+      - "CLOUDSDK_COMPUTE_REGION=<REGION>"
+      - "CLOUDSDK_CONTAINER_CLUSTER=<CLUSTER_NAME>"
+    args: ["apply", "-f", "backend/k8s/"]
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/cs144-25s-team16/secrets/docker-password/versions/1
+      env: "PASSWORD"
+    - versionName: projects/cs144-25s-team16/secrets/docker-username/versions/1
+      env: "USERNAME"
+
+images:
+  - "docker.io/ghtjason/doodly-repo:latest"
