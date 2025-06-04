@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
+import { login } from "@/utils/api";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageComponent />
+    </Suspense>
+  );
+}
+
+const LoginPageComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
@@ -21,11 +29,7 @@ export default function LoginPage() {
       setError(false);
       setSuccess(false);
 
-      const res = await axios.post(
-        "http://localhost:3001/api/login/session",
-        { username, password },
-        { withCredentials: true }
-      );
+      const res = await login(username, password);
 
       if (res.status !== 200) {
         setError(true);
@@ -36,7 +40,7 @@ export default function LoginPage() {
 
       const redirectTo = searchParams.get("redirect") || "/";
       await fetchUser?.();
-      setTimeout(() => router.push(redirectTo), 1000); // Redirect after short delay
+      setTimeout(() => router.replace(redirectTo), 1000); // Redirect after short delay
     } catch (err) {
       setError(true);
       console.error("Login failed", err);
@@ -68,6 +72,7 @@ export default function LoginPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="nes-input"
+          autoComplete="username"
           required
         />
         <input
@@ -76,6 +81,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="nes-input"
+          autoComplete="current-password"
           required
         />
         <button type="submit" className="nes-btn is-primary">
@@ -91,4 +97,4 @@ export default function LoginPage() {
       </p>
     </div>
   );
-}
+};

@@ -20,6 +20,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
   const { user } = useUser() as { user?: User };
 
+  const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -40,12 +41,12 @@ export default function Game({ gameId }: { gameId: string }) {
   const startGame = () => {
     if (!socket) return;
     socket.emit("start_game");
-  }
+  };
 
   const endGame = () => {
     if (!socket) return;
     socket.emit("end_game");
-  }
+  };
 
   useEffect(() => {
     if (!socket) return;

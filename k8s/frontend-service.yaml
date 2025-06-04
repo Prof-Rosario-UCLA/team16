@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: doodly-frontend-service
+spec:
+  selector:
+    app: doodly-frontend
+  ports:
+    - protocol: TCP
+      port: 80 # Service port
+      targetPort: 3000 # Container port
+  type: ClusterIP # Essential for Ingress backends

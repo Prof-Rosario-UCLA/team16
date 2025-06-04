@@ -1,3 +1,4 @@
+import { baseURL } from "@/utils/api";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -13,8 +14,9 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   useEffect(() => {
     console.log("Connecting to socket.io server...");
-    const newSocket = io("localhost:3001", {
+    const newSocket = io(baseURL, {
       withCredentials: true,
+      path: "/ws",
     });
     setSocket(newSocket);
     return () => {

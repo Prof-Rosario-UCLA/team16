@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/contexts/UserContext";
-import axios from "axios";
+import { createGame } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -16,12 +16,17 @@ export default function Home() {
   }, [user, loading, router]);
 
   const handleCreateGame = async () => {
-    const res = await axios.post("http://localhost:3001/api/game", {}, { withCredentials: true });
+    const res = await createGame();
     const gameId = res.data.id;
     router.push(`/game/${gameId}`);
   };
 
-  if (loading) return <div className="flex items-center justify-center w-full h-screen">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center w-full h-screen">
+        Loading...
+      </div>
+    );
 
   if (!user) return null; // Or a placeholder until redirect
 

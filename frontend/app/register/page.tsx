@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import Link from "next/link";
+import { register } from "@/utils/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,12 +18,7 @@ export default function RegisterPage() {
     setSuccess(false);
 
     try {
-      const res = await axios.post(
-        "http://localhost:3001/api/login",
-        { username, password },
-        { withCredentials: true }
-      );
-
+      const res = await register(username, password);
       if (res.status === 200 || res.status === 201) {
         setSuccess(true);
         setTimeout(() => {

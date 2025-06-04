@@ -1,0 +1,12 @@
+# No changes needed unless you change the name of the frontend
+# and it is references from ingress.yaml
+
+# file is just called frontendconfig.yaml, applies to both frontend and backend
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: default-redirect-config
+spec:
+  redirectToHttps:
+    enabled: true
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT
