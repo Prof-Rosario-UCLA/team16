@@ -3,6 +3,11 @@ import GameChat from "@/components/GameChat";
 import { useSocketContext } from "@/contexts/SocketContext";
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
+
+type User = {
+  username: string;
+};
 
 type Player = {
   name: string;
@@ -10,21 +15,17 @@ type Player = {
   isDrawing: boolean;
 };
 
-// const dummyPlayers: Player[] = [
-//   { name: "Player 1", points: 10, isDrawing: false },
-//   { name: "Player 2", points: 20, isDrawing: true },
-//   { name: "Player 3", points: 15, isDrawing: false },
-// ];
-
 export default function Game({ gameId }: { gameId: string }) {
+  const router = useRouter();
   const socket = useSocketContext();
-  const { user } = useUser() ?? {};
+  const { user } = useUser() as { user?: User };
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [turnActive, setTurnActive] = useState(false);
-
+  const [gameEnded, setGameEnded] = useState(false);
+  const [finalPlayers, setFinalPlayers] = useState<Player[]>([]);
 
 
   // round info
@@ -34,8 +35,6 @@ export default function Game({ gameId }: { gameId: string }) {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
-  // const [drawerIndex, setDrawerIndex] = useState<number | null>(null);
-  // const drawerName = drawerIndex !== null ? players[drawerIndex]?.name : "";
 
 
   const startGame = () => {
@@ -64,6 +63,9 @@ export default function Game({ gameId }: { gameId: string }) {
 
     socket.on("error_message", ({ message }) => {
       alert(message);
+      if (message === "Game already started. Cannot join." || message === "Game has ended. Cannot join.") {
+        router.push("/"); // return to home screen
+      }
     });
 
     socket.on("reveal_info", ({ roundNum, currDrawer, wordLength }) => {
@@ -86,8 +88,10 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnActive(true);
     });
 
-    socket.on("game_ended", () => {
+    socket.on("game_ended", ({ game }) => {
       setGameStarted(false);
+      setGameEnded(true);
+      setFinalPlayers(game.players)
     })
 
     return () => {
@@ -98,7 +102,7 @@ export default function Game({ gameId }: { gameId: string }) {
       socket.off("start_turn");
       socket.off("game_ended");
     };
-  }, [socket, gameId]);
+  }, [socket, gameId, router]);
 
   useEffect(() => {
     if (!socket) return;
@@ -113,8 +117,6 @@ export default function Game({ gameId }: { gameId: string }) {
         clearInterval(interval);
 
         const isDrawer = user?.username === currDrawer;
-        setWordLength(0);
-        setCurrWord("");
 
         if (isDrawer) {
           socket.emit("end_turn");
@@ -123,7 +125,7 @@ export default function Game({ gameId }: { gameId: string }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [endTime, gameStarted, currDrawer, socket, user?.username]);
+  }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
 
 
@@ -140,7 +142,7 @@ export default function Game({ gameId }: { gameId: string }) {
           )}
           {user?.username === currDrawer && (
             <>
-              <div className="text-2xl font-bold">You're up!</div>
+              <div className="text-2xl font-bold">You&apos;re up!</div>
               <div className="text-xl mt-2 italic">Your word: {currWord}</div>
             </>
           )}
@@ -172,12 +174,37 @@ export default function Game({ gameId }: { gameId: string }) {
             
           )}
           </div>
-          {/* <button className="nes-btn mt-2" onClick={endGame}>
+          <button className="nes-btn mt-2" onClick={endGame}>
             End Game
-          </button> */}
+          </button>
         </div>
       )}
     </div>
+
+    {gameEnded && (
+      <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
+        <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
+          <h2 className="text-2xl font-bold mb-4">Game Over</h2>
+          <p className="text-lg mb-4">Final Scores:</p>
+          <ul className="space-y-2">
+            {finalPlayers
+              .sort((a, b) => b.points - a.points)
+              .map((player, idx) => (
+                <li key={idx} className="flex justify-between px-4">
+                  <span className="nes-text is-primary">{player.name}</span>
+                  <span className="nes-text is-error">{player.points} pts</span>
+                </li>
+            ))}
+          </ul>
+          <button
+            className="nes-btn mt-6"
+            onClick={() => router.push("/")}
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    )}
 
     {/* Main content */}
     <div className="flex flex-row items-center flex-1 p-10 pt-2 h-full w-full gap-8 bg-blue-200 justify-center z-0">
