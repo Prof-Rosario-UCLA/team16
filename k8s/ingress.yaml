@@ -24,14 +24,14 @@ spec:
                 port:
                   number: 80 # The port your Service listens on
           - path: /api
-            pathType: ImplementationSpecific
+            pathType: Prefix
             backend:
               service:
                 name: doodly-backend-service # Your ClusterIP Service name
                 port:
                   number: 80 # The port your Service listens on
           - path: /ws # websockets expects /ws path
-            pathType: ImplementationSpecific
+            pathType: Prefix
             backend:
               service:
                 name: doodly-backend-service # Your ClusterIP Service name
