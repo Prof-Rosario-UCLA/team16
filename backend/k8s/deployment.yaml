@@ -15,6 +15,7 @@ spec:
       containers:
         - name: doodly
           image: us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1
+          imagePullPolicy: Always # always pull the latest image
           ports:
             - containerPort: 3001 # port that container listens on
           env:
