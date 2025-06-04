@@ -40,7 +40,7 @@ const LoginPageComponent = () => {
 
       const redirectTo = searchParams.get("redirect") || "/";
       await fetchUser?.();
-      setTimeout(() => router.push(redirectTo), 1000); // Redirect after short delay
+      setTimeout(() => router.replace(redirectTo), 1000); // Redirect after short delay
     } catch (err) {
       setError(true);
       console.error("Login failed", err);
@@ -72,6 +72,7 @@ const LoginPageComponent = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="nes-input"
+          autoComplete="username"
           required
         />
         <input
@@ -80,6 +81,7 @@ const LoginPageComponent = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="nes-input"
+          autoComplete="current-password"
           required
         />
         <button type="submit" className="nes-btn is-primary">
