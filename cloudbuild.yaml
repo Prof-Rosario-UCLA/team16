@@ -23,3 +23,6 @@ steps:
 
 images:
   - "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
