@@ -1,3 +1,4 @@
+import { baseURL } from "@/utils/api";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -8,12 +9,15 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 
+const socketURL =
+  process.env.NODE_ENV === "production" ? `${baseURL}/ws` : `${baseURL}`;
+
 export function SocketProvider({ children }: SocketProviderProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     console.log("Connecting to socket.io server...");
-    const newSocket = io("localhost:3001", {
+    const newSocket = io(socketURL, {
       withCredentials: true,
     });
     setSocket(newSocket);

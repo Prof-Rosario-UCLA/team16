@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import { getUser } from "@/utils/api";
 
 interface UserContextType {
   user: unknown; // Replace 'any' with a more specific type if available
@@ -22,7 +22,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3001/api/user/me", { withCredentials: true });
+      const res = await getUser();
       setUser(res.data);
     } catch (err) {
       console.warn("Not logged in:", err);
@@ -31,7 +31,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchUser();
   }, []);

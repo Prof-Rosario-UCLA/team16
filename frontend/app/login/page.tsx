@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
+import { login } from "@/utils/api";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageComponent />
+    </Suspense>
+  );
+}
+
+const LoginPageComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
@@ -21,11 +29,7 @@ export default function LoginPage() {
       setError(false);
       setSuccess(false);
 
-      const res = await axios.post(
-        "http://localhost:3001/api/login/session",
-        { username, password },
-        { withCredentials: true }
-      );
+      const res = await login(username, password);
 
       if (res.status !== 200) {
         setError(true);
@@ -91,4 +95,4 @@ export default function LoginPage() {
       </p>
     </div>
   );
-}
+};

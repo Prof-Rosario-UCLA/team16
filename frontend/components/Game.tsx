@@ -17,19 +17,19 @@ type Player = {
 
 export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
-  const [joined, setJoined] = useState(false);
+  const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
 
   const startGame = () => {
     if (!socket) return;
     socket.emit("start_game");
-  }
+  };
 
   const endGame = () => {
     if (!socket) return;
     socket.emit("end_game");
-  }
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -45,14 +45,15 @@ export default function Game({ gameId }: { gameId: string }) {
     socket.on("user_left", ({ game }) => {
       setPlayers(game.players);
     });
-  
+
     socket.on("game_started", () => {
+      console.log("Game started");
       setGameStarted(true);
     });
 
     socket.on("game_ended", () => {
       setGameStarted(false);
-    })
+    });
 
     return () => {
       socket.off("user_joined");
@@ -67,17 +68,17 @@ export default function Game({ gameId }: { gameId: string }) {
       <div className="flex flex-row items-center w-full justify-center">
         {!gameStarted && (
           <div className="z-50">
-          <button className="nes-btn is-success" onClick={startGame}>
-            Start Game
-          </button>
-        </div>
+            <button className="nes-btn is-success" onClick={startGame}>
+              Start Game
+            </button>
+          </div>
         )}
         {gameStarted && (
           <div className="z-50">
-          <button className="nes-btn" onClick={endGame}>
-            End Game
-          </button>
-        </div>
+            <button className="nes-btn" onClick={endGame}>
+              End Game
+            </button>
+          </div>
         )}
       </div>
 

@@ -18,12 +18,16 @@ import jwt from "jsonwebtoken";
 
 const app = express();
 const server = http.createServer(app);
+const origin =
+  process.env.NODE_ENV === "production"
+    ? "https://team16.cs144.org"
+    : "http://localhost:3000";
 const io = new Server(server, {
-  cors: { origin: "http://localhost:3000", credentials: true },
+  cors: { origin, credentials: true },
 });
 
 const corsOptions = {
-  origin: "http://localhost:3000", // change on deployment
+  origin,
   credentials: true,
 };
 
@@ -52,10 +56,7 @@ app.use("/api/test", testRoutes);
 
 // socket.io logic
 // auth
-io.use((socket, next) => {
-  // socket.data.user = "ghtjason";
-  // next();
-
+io.of("/api").use((socket, next) => {
   const cookieHeader = socket.handshake.headers.cookie;
   if (!cookieHeader) {
     return next(new Error("No cookies found"));
