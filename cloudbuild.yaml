@@ -5,7 +5,7 @@ steps:
         "build",
         "-t",
         "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1",
-        ".",
+        "backend/",
       ]
 
   - name: "gcr.io/cloud-builders/docker"
@@ -17,9 +17,9 @@ steps:
 
   - name: "gcr.io/cloud-builders/kubectl"
     env:
-      - "CLOUDSDK_COMPUTE_REGION=us-west1"
+      - "CLOUDSDK_COMPUTE_ZONE=us-west1-b"
       - "CLOUDSDK_CONTAINER_CLUSTER=doodly-cluster"
-    args: ["apply", "-f", "k8s/"]
+    args: ["apply", "-f", "backend/k8s/"]
 
 images:
   - "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1"
