@@ -17,6 +17,26 @@ spec:
           image: us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1
           ports:
             - containerPort: 3001 # port that container listens on
+          env:
+            - name: PORT
+              value: "3001"
+            - name: NODE_ENV
+              value: "production"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: doodly-secrets
+                  key: mongo_uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: doodly-secrets
+                  key: jwt_secret
+            - name: COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: doodly-secrets
+                  key: cookie_secret
 # resources: # optional, for HPA
 #   requests:
 #     cpu: "500m"
