@@ -40,7 +40,7 @@ const LoginPageComponent = () => {
 
       const redirectTo = searchParams.get("redirect") || "/";
       await fetchUser?.();
-      setTimeout(() => router.push(redirectTo), 1000); // Redirect after short delay
+      setTimeout(() => router.replace(redirectTo), 1000); // Redirect after short delay
     } catch (err) {
       setError(true);
       console.error("Login failed", err);
