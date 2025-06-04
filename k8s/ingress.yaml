@@ -20,6 +20,20 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: doodly-service # Your ClusterIP Service name
+                name: doodly-frontend-service # Your ClusterIP Service name
+                port:
+                  number: 80 # The port your Service listens on
+          - path: /api
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: doodly-backend-service # Your ClusterIP Service name
+                port:
+                  number: 80 # The port your Service listens on
+          - path: /ws # websockets expects /ws path
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: doodly-backend-service # Your ClusterIP Service name
                 port:
                   number: 80 # The port your Service listens on

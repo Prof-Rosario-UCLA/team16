@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: doodly-backend-service
+  annotations:
+    beta.cloud.google.com/backend-config: '{"default": "ws-backendconfig"}' # Link to BackendConfig for websocket stuff
+spec:
+  selector:
+    app: doodly-backend
+  ports:
+    - protocol: TCP
+      port: 80 # Service port
+      targetPort: 3001 # Container port
+  type: ClusterIP # Essential for Ingress backends

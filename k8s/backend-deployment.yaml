@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doodly
+  name: doodly-backend
 spec:
   replicas: 1 # pods
   selector:
     matchLabels:
-      app: doodly
+      app: doodly-backend
   template:
     metadata:
       labels:
-        app: doodly
+        app: doodly-backend
     spec:
       containers:
-        - name: doodly
+        - name: doodly-backend
           image: us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1
           imagePullPolicy: Always # always pull the latest image
           ports:

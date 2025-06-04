@@ -1,5 +1,7 @@
 steps:
-  - name: "gcr.io/cloud-builders/docker"
+  # backend
+  - id: "build-backend"
+    name: "gcr.io/cloud-builders/docker"
     args:
       [
         "build",
@@ -7,6 +9,7 @@ steps:
         "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1",
         "backend/",
       ]
+    waitFor: ["-"] # execute immediately
 
   - name: "gcr.io/cloud-builders/docker"
     args:
@@ -14,15 +17,37 @@ steps:
         "push",
         "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1",
       ]
+    waitFor: ["build-backend"]
+
+  # frontend
+  - id: "build-frontend"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly-frontend:v1",
+        "frontend/",
+      ]
+    waitFor: ["-"] # execute immediately
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly-frontend:v1",
+      ]
+    waitFor: ["build-frontend"]
 
   - name: "gcr.io/cloud-builders/kubectl"
     env:
       - "CLOUDSDK_COMPUTE_ZONE=us-west1-b"
       - "CLOUDSDK_CONTAINER_CLUSTER=doodly-cluster"
-    args: ["apply", "-f", "backend/k8s/"]
+    args: ["apply", "-f", "k8s/"]
 
 images:
-  - "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1"
+  - "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1" # backend
+  - "us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly-frontend:v1" # frontend
 
 options:
   logging: CLOUD_LOGGING_ONLY

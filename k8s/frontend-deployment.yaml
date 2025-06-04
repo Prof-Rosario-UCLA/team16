@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doodly-frontend
+spec:
+  replicas: 1 # pods
+  selector:
+    matchLabels:
+      app: doodly-frontend
+  template:
+    metadata:
+      labels:
+        app: doodly-frontend
+    spec:
+      containers:
+        - name: doodly-frontend
+          image: us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly-frontend:v1
+          imagePullPolicy: Always # always pull the latest image
+          ports:
+            - containerPort: 3000 # port that container listens on
+          env:
+            - name: NODE_ENV
+              value: "production"
+# resources: # optional, for HPA
+#   requests:
+#     cpu: "500m"
+#   limits:
+#     cpu: "1000m" # 1 full core
