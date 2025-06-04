@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: doodly
-          image: docker.io/ghtjason/doodly-repo:latest
+          image: us-west1-docker.pkg.dev/cs144-25s-team16/doodly-gae-repo/doodly:v1
           ports:
             - containerPort: 3001 # port that container listens on
 # resources: # optional, for HPA
