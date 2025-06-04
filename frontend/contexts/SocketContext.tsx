@@ -9,16 +9,14 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 
-const socketURL =
-  process.env.NODE_ENV === "production" ? `${baseURL}/ws` : `${baseURL}`;
-
 export function SocketProvider({ children }: SocketProviderProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     console.log("Connecting to socket.io server...");
-    const newSocket = io(socketURL, {
+    const newSocket = io(baseURL, {
       withCredentials: true,
+      path: "/ws",
     });
     setSocket(newSocket);
     return () => {

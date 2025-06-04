@@ -24,6 +24,7 @@ const origin =
     : "http://localhost:3000";
 const io = new Server(server, {
   cors: { origin, credentials: true },
+  path: "/ws",
 });
 
 const corsOptions = {
@@ -56,7 +57,7 @@ app.use("/api/test", testRoutes);
 
 // socket.io logic
 // auth
-io.of("/api").use((socket, next) => {
+io.use((socket, next) => {
   const cookieHeader = socket.handshake.headers.cookie;
   if (!cookieHeader) {
     return next(new Error("No cookies found"));
