@@ -52,7 +52,7 @@ const DrawAreaSockets = () => {
       setGlobalLines(new Map());
       globalToLocalIds.current.clear();
       numPoints.current = 0;
-      setPruneLocalTrigger((prev) => !prev);
+      setClearLocalTrigger((prev) => !prev);
     });
 
     return () => {
@@ -94,7 +94,6 @@ const DrawAreaSockets = () => {
     setGlobalLines(new Map());
     globalToLocalIds.current.clear();
     numPoints.current = 0;
-    setClearLocalTrigger((prev) => !prev);
   };
 
   return (
