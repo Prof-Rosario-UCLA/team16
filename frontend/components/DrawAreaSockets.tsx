@@ -11,6 +11,7 @@ type LineUpdate = {
 const DrawAreaSockets = () => {
   const [globalLines, setGlobalLines] = useState<Map<string, Line>>(new Map());
   const [pruneLocalTrigger, setPruneLocalTrigger] = useState(false);
+  const [clearLocalTrigger, setClearLocalTrigger] = useState(false);
   const numPoints = useRef(0);
 
   const globalToLocalIds = useRef(new Map<string, string>());
@@ -51,6 +52,7 @@ const DrawAreaSockets = () => {
       setGlobalLines(new Map());
       globalToLocalIds.current.clear();
       numPoints.current = 0;
+      setClearLocalTrigger((prev) => !prev);
     });
 
     return () => {
@@ -102,6 +104,7 @@ const DrawAreaSockets = () => {
       onClear={handleClear}
       globalLines={[...globalLines.values()]}
       pruneLocalTrigger={pruneLocalTrigger}
+      clearLocalTrigger={clearLocalTrigger}
     />
   );
 };

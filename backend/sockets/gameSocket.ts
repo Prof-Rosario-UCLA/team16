@@ -2,6 +2,9 @@ import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
+const ROUND_DURATION = 10 * 1000; // 30 seconds
+const INTERVAL = 3 * 1000; // 3 second interval
+const NUM_ROUNDS = 2
 
 type Point = {
   x: number;
@@ -26,22 +29,33 @@ type Player = {
   isDrawing: boolean;
 };
 
+type Round = {
+  roundNum: number | null;
+  drawerIndex: number | null;
+  endTime: number | null;
+  word: string | null;
+}
+
 type GameState = {
   // js guarantees insertion order so this works!
   // global line id to line
-  id: String;
+  id: string;
   lines: Map<string, Line>;
-  players: Player[];
+  players: Player[]; // player includes points
+  round: Round // round info
+  status: string; // notStarted, active, ended
 };
 
 const games = new Map<string, GameState>();
+
+const dummyWords = ["giraffe", "elephant", "dog", "cat", "flower"]
 
 export function setupGameSocket(io: Server, socket: Socket) {
   // joining a game
   socket.on("join_game", (gameId: string, cb?: () => void) => {
     console.log("User connected", socket.data.user);
-    socket.data.gameId = gameId;
 
+    socket.data.gameId = gameId;
     socket.data.lines = new Map<string, string>(); // client to global line ids
 
     // create game state if it doesn't exist
@@ -50,12 +64,31 @@ export function setupGameSocket(io: Server, socket: Socket) {
         id: gameId,
         lines: new Map(),
         players: [],
+        round: {
+          roundNum: null,
+          drawerIndex: null,
+          endTime: null,
+          word: null
+        },
+        status: "notStarted"
       });
     }
     
+    // cannot join a game that has already begun
     const game = games.get(gameId)!;
-    socket.join(gameId);
+    if (game.status === "active") {
+      socket.emit("error_message", { message: "Game already started. Cannot join." });
+      return;
+    }
 
+    // cannot join a game that has ended
+    if (game.status === "ended") {
+      socket.emit("error_message", { message: "Game has ended. Cannot join." });
+      return;
+    }
+
+
+    // update player list
     const playerExists = game.players.some(p => p.name === socket.data.user);
     if (!playerExists) {
       game.players.push({
@@ -65,22 +98,147 @@ export function setupGameSocket(io: Server, socket: Socket) {
       } as Player);
     }
 
-    io.to(gameId).emit("user_joined", { user: socket.data.user, game: games.get(gameId) });
+     socket.join(gameId);
+
+    io.to(gameId).emit("user_joined", { 
+      user: socket.data.user, 
+      players: game.players 
+    });
 
     if (cb) cb();
   });
 
   socket.on("start_game", () => {
     const gameId = socket.data.gameId;
+
     if (gameId) {
-      io.to(gameId).emit("game_started");
+      const game = games.get(gameId)!;
+      // don't start game if < 2 players
+      if (game.players.length < 2) {
+        io.to(gameId).emit("error_message", { message: "Need at least 2 players to start." });
+        return
+      }
+      const drawerIndex = 0;
+      const word = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: pull from database
+
+      // clear canvas
+      games.get(socket.data.gameId)?.lines.clear();
+      io.to(gameId).emit("clear_lines");
+
+      game.round = {
+        roundNum: 1,
+        drawerIndex,
+        endTime: null, // don't set endTime yet (don't start immediately)
+        word,
+      }
+      game.status = "active"
+
       console.log(`Game ${gameId} started`);
+      
+      // reveal round number and current drawer to everyone
+      io.to(gameId).emit("reveal_info", {
+        roundNum: game.round.roundNum,
+        currDrawer: game.players[drawerIndex].name,
+        wordLength: game.round.word?.length ?? 0
+      });
+
+      // only reveal word to the current drawer
+      const drawerSocket = [...io.sockets.sockets.values()].find(
+        (s) => s.data.user === game.players[drawerIndex].name && s.data.gameId === gameId
+      );
+      if (drawerSocket) {
+        drawerSocket.emit("reveal_word", { word });
+      }
+
+      // wait 5 seconds, then start timer
+      setTimeout(() => {
+        const endTime = Date.now() + ROUND_DURATION;
+        game.round.endTime = endTime;
+
+        io.to(gameId).emit("start_turn", { endTime });
+
+        console.log(`Turn started in game ${gameId}`);
+      }, INTERVAL);
     }
   });
+
+  socket.on("end_turn", () => {
+    const gameId = socket.data.gameId;
+    if (!gameId) return;
+ 
+    if (gameId) {
+      const game = games.get(gameId)!;
+
+      // advance drawer
+      const currentIndex = game.round.drawerIndex!;
+      const nextDrawerIndex = (currentIndex + 1) % game.players.length;
+
+      // advance round if needed
+      let nextRoundNum = game.round.roundNum ?? 1;
+      if (currentIndex >= game.players.length - 1) {
+        nextRoundNum += 1;
+      }
+
+      const nextWord = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: fetch from database
+
+      if (nextRoundNum > NUM_ROUNDS) {
+        game.status = "ended"
+        io.to(gameId).emit("game_ended", { game });
+        return;
+      }
+
+      // update game.round
+      game.round = {
+        roundNum: nextRoundNum,
+        drawerIndex: nextDrawerIndex,
+        endTime: null,
+        word: nextWord,
+      };
+
+      // clear canvas
+      games.get(socket.data.gameId)?.lines.clear();
+      io.to(gameId).emit("clear_lines");
+
+      io.to(gameId).emit("reveal_info", {
+        roundNum: nextRoundNum,
+        currDrawer: game.players[nextDrawerIndex].name,
+        wordLength: game.round.word?.length ?? 0
+      });
+
+      const drawerSocket = [...io.sockets.sockets.values()].find(
+        (s) => s.data.user === game.players[nextDrawerIndex].name && s.data.gameId === gameId
+      );
+      if (drawerSocket) {
+        drawerSocket.emit("reveal_word", { word: nextWord });
+      }
+
+      // wait 5 seconds, then start timer
+      setTimeout(() => {
+        const endTime = Date.now() + ROUND_DURATION;
+        game.round.endTime = endTime;
+
+        io.to(gameId).emit("start_turn", { endTime });
+      }, INTERVAL);
+    }
+
+    
+  })
+
   socket.on("end_game", () => {
     const gameId = socket.data.gameId;
     if (gameId) {
-      io.to(gameId).emit("game_ended");
+      const game = games.get(gameId)!;
+      game.round = {
+        roundNum: null,
+        drawerIndex: null,
+        endTime: null,
+        word: null,
+      };
+      game.status = "ended"
+
+      games.get(socket.data.gameId)?.lines.clear();
+      io.to(gameId).emit("clear_lines");
+      io.to(gameId).emit("game_ended", { game });
       console.log(`Game ${gameId} ended`);
     }
   });
@@ -107,8 +265,22 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     socket.to(socket.data.gameId).emit("user_left", {
       user: socket.data.user,
-      game: game
+      players: game.players
     });
+
+    if (game.players.length < 2 && game.status === "active") {
+      game.status = "ended"
+      io.to(gameId).emit("error_message", { message: "Not enough players remaining. Ending game." });
+      io.to(gameId).emit("game_ended", { game });
+
+      game.round = {
+        roundNum: null,
+        drawerIndex: null,
+        endTime: null,
+        word: null,
+      };
+    }
+
     console.log("User disconnected", socket.data.user);
   });
 
