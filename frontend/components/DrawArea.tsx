@@ -2,9 +2,10 @@
 "use client";
 
 import { memo } from "react";
-import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
 import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
+import { DrawingLineWasm } from "@/components/DrawingLineWasm";
+import { pointsToPathWasm } from "@/utils/pointsToPathWasm";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 
@@ -207,7 +208,7 @@ export default function DrawArea({
         className="bg-white"
       >
         {globalLines.concat(localLines).map((line) => (
-          <DrawingLine key={line.id} line={line} />
+          <DrawingLineWasm key={line.id} line={line} />
         ))}
       </svg>
       <DrawAreaControls
@@ -339,7 +340,7 @@ const exportDrawing = (lines: Line[]) => {
     ctx.lineWidth = line.width;
     ctx.beginPath();
     const path = new Path2D();
-    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+    path.addPath(new Path2D(pointsToPathWasm(line.points, 0.2)));
     ctx.stroke(path);
   });
   const img = new Image();

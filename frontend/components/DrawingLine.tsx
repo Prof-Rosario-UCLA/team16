@@ -97,7 +97,10 @@ export const DrawingLine = memo(
   }: DrawingLineProps) => {
     if (line.points.length === 0) return null;
 
+    // const start = performance.now();
     const pathData = pointsToPath(line.points, smoothing);
+    // const end = performance.now();
+    // console.log(`pointsToPath took ${end - start} ms`);
 
     return (
       <path
