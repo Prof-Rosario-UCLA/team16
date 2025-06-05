@@ -70,7 +70,6 @@ const DrawAreaSockets = ({user} : {user: string | undefined}) => {
 
   const handleLineStart = (line: Line) => {
     if (!socket) return;
-    // if (user !== currDrawer) return;
 
     socket.emit("line_start", line, (globalId: string) => {
       globalToLocalIds.current.set(globalId, line.id);

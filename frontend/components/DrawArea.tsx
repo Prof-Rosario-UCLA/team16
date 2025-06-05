@@ -214,18 +214,22 @@ export default function DrawArea({
           <DrawingLine key={line.id} line={line} />
         ))}
       </svg>
-      <DrawAreaControls
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        erase={erase}
-        setStrokeColor={setStrokeColor}
-        setStrokeWidth={setStrokeWidth}
-        setErase={setErase}
-        clear={() => {
-          setLocalLines([]);
-          onClear?.();
-        }}
-      />
+      
+      { isCurrDrawer ? // render controls only if is curr drawer
+        <DrawAreaControls
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          erase={erase}
+          setStrokeColor={setStrokeColor}
+          setStrokeWidth={setStrokeWidth}
+          setErase={setErase}
+          clear={() => {
+            setLocalLines([]);
+            onClear?.();
+          }}
+        /> : <></>
+      }
+
       {/* download */}
       <div className="absolute bottom-[-4.5em] right-0 text-xs">
         <button
