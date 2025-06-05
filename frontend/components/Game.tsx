@@ -20,7 +20,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
   const { user } = useUser() as { user?: User };
 
-  const [, setJoined] = useState(false);
+  // const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
