@@ -8,10 +8,11 @@ type LineUpdate = {
   id: string;
 };
 
-const DrawAreaSockets = () => {
+const DrawAreaSockets = ({user} : {user: string | undefined}) => {
   const [globalLines, setGlobalLines] = useState<Map<string, Line>>(new Map());
   const [pruneLocalTrigger, setPruneLocalTrigger] = useState(false);
   const [clearLocalTrigger, setClearLocalTrigger] = useState(false);
+  const [currDrawer, setCurrDrawer] = useState()
   const numPoints = useRef(0);
 
   const globalToLocalIds = useRef(new Map<string, string>());
@@ -55,6 +56,10 @@ const DrawAreaSockets = () => {
       setClearLocalTrigger((prev) => !prev);
     });
 
+    socket.on("reveal_info", ({ roundNum, currDrawer, wordLength }) => {
+      setCurrDrawer(currDrawer);
+    });
+
     return () => {
       socket.off("line_start");
       socket.off("line_update");
@@ -65,6 +70,7 @@ const DrawAreaSockets = () => {
 
   const handleLineStart = (line: Line) => {
     if (!socket) return;
+    // if (user !== currDrawer) return;
 
     socket.emit("line_start", line, (globalId: string) => {
       globalToLocalIds.current.set(globalId, line.id);
@@ -105,6 +111,7 @@ const DrawAreaSockets = () => {
       globalLines={[...globalLines.values()]}
       pruneLocalTrigger={pruneLocalTrigger}
       clearLocalTrigger={clearLocalTrigger}
+      isCurrDrawer={user === currDrawer}
     />
   );
 };

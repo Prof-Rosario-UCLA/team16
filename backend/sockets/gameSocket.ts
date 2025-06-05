@@ -115,7 +115,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       const game = games.get(gameId)!;
       // don't start game if < 2 players
       if (game.players.length < 2) {
-        io.to(gameId).emit("error_message", { message: "Need at least 2 players to start." });
+        const message = `Need at least 2 players to start. ${game.players}`;
+        io.to(gameId).emit("error_message", { message: message });
         return
       }
       const drawerIndex = 0;
