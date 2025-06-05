@@ -54,6 +54,7 @@ interface DrawAreaProps {
   onClear?: () => void;
   globalLines?: Line[];
   pruneLocalTrigger?: boolean;
+  clearLocalTrigger?: boolean;
 }
 
 export default function DrawArea({
@@ -63,6 +64,7 @@ export default function DrawArea({
   onClear,
   globalLines = [],
   pruneLocalTrigger = false,
+  clearLocalTrigger = false,
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [localLines, setLocalLines] = useState<Line[]>([]);
@@ -96,6 +98,12 @@ export default function DrawArea({
       return prevLines.slice(1, prevLines.length);
     });
   }, [pruneLocalTrigger]);
+
+  useEffect(() => {
+    // clears canvas, stops drawing
+    setLocalLines([]);
+    setIsDrawing(false);
+  }, [clearLocalTrigger]);
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
     // only start on left click
