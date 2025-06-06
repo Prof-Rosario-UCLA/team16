@@ -13,11 +13,28 @@ export const DrawingLineWasm = memo(
     smoothing = 0.2, // default smoothing factor
   }: DrawingLineProps) => {
     if (line.points.length === 0) return null;
+    if (line.points.length === 1) {
+      // If only one point, draw a dot
+      return (
+        <circle
+          cx={line.points[0].x}
+          cy={line.points[0].y}
+          r={line.width / 2}
+          fill={line.color}
+        />
+      );
+    }
 
-    // const start = performance.now();
+    const start = performance.now();
     const pathData = pointsToPathWasm(line.points, smoothing);
-    // const end = performance.now();
-    // console.log(`pointsToPathWasm took ${end - start} ms`);
+    const end = performance.now();
+    if (end - start > 10) {
+      console.warn(
+        `pointsToPathWasm took ${
+          end - start
+        } ms, which is longer than expected.`
+      );
+    }
 
     return (
       <path
