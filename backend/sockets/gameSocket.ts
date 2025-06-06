@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
+import { getRandomWord } from "../utils/api"
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 const ROUND_DURATION = 10 * 1000; // 30 seconds
@@ -44,6 +45,7 @@ type GameState = {
   players: Player[]; // player includes points
   round: Round // round info
   status: string; // notStarted, active, ended
+  usedWords: string[]; // used words for this game (avoid repeats if we can)
 };
 
 const games = new Map<string, GameState>();
@@ -70,7 +72,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
           endTime: null,
           word: null
         },
-        status: "notStarted"
+        status: "notStarted",
+        usedWords: []
       });
     }
     
@@ -108,7 +111,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     if (cb) cb();
   });
 
-  socket.on("start_game", () => {
+  socket.on("start_game", async () => {
     const gameId = socket.data.gameId;
 
     if (gameId) {
@@ -119,7 +122,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
         return
       }
       const drawerIndex = 0;
-      const word = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: pull from database
+      const res = await getRandomWord(game.usedWords)
+      const word = res.text
+      game.usedWords.push(word);
 
       // clear canvas
       games.get(socket.data.gameId)?.lines.clear();
@@ -162,7 +167,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     }
   });
 
-  socket.on("end_turn", () => {
+  socket.on("end_turn", async () => {
     const gameId = socket.data.gameId;
     if (!gameId) return;
  
@@ -179,7 +184,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
         nextRoundNum += 1;
       }
 
-      const nextWord = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: fetch from database
+      const res = await getRandomWord(game.usedWords)
+      const nextWord = res.text
+      game.usedWords.push(nextWord);
 
       if (nextRoundNum > NUM_ROUNDS) {
         game.status = "ended"
@@ -199,6 +206,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
       games.get(socket.data.gameId)?.lines.clear();
       io.to(gameId).emit("clear_lines");
 
+      // start next turn
       io.to(gameId).emit("reveal_info", {
         roundNum: nextRoundNum,
         currDrawer: game.players[nextDrawerIndex].name,
