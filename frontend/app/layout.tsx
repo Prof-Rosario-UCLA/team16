@@ -5,9 +5,36 @@ import { UserProvider } from "@/contexts/UserContext";
 import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
 import CookieBanner from "@/components/CookieBanner";
 
+const APP_NAME = "doodly";
+const APP_DEFAULT_TITLE = "doodly";
+const APP_TITLE_TEMPLATE = "%s - PWA App";
+const APP_DESCRIPTION = "A fun drawing game to play with friends!";
+
 export const metadata: Metadata = {
-  title: "Doodly",
-  description: "A casual drawing game",
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  }
 };
 
 const pressStart2P = Press_Start_2P({
