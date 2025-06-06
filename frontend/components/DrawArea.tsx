@@ -5,7 +5,11 @@ import { memo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
 import { DrawingLineWasm } from "@/components/DrawingLineWasm";
+import { DrawingLine } from "@/components/DrawingLine";
 import { pointsToPathWasm } from "@/utils/pointsToPathWasm";
+
+const USE_WASM = false;
+const Line = USE_WASM ? DrawingLineWasm : DrawingLine;
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 
@@ -208,7 +212,7 @@ export default function DrawArea({
         className="bg-white"
       >
         {globalLines.concat(localLines).map((line) => (
-          <DrawingLineWasm key={line.id} line={line} />
+          <Line key={line.id} line={line} />
         ))}
       </svg>
       <DrawAreaControls

@@ -28,7 +28,7 @@ export const DrawingLineWasm = memo(
     const start = performance.now();
     const pathData = pointsToPathWasm(line.points, smoothing);
     const end = performance.now();
-    if (end - start > 10) {
+    if (end - start > 20) {
       console.warn(
         `pointsToPathWasm took ${
           end - start

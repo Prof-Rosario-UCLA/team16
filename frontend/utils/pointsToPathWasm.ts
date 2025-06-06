@@ -1,5 +1,5 @@
 import { Point } from "@/components/DrawArea";
-import * as rustWasm from "@/wasm/bezier/pkg/bezier";
+import * as rustWasm from "@/wasm/bezier/pkg/bezier.js";
 
 let wasmInstance: rustWasm.InitOutput | null = null;
 // initialize wasm first

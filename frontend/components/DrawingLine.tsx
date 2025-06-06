@@ -97,10 +97,26 @@ export const DrawingLine = memo(
   }: DrawingLineProps) => {
     if (line.points.length === 0) return null;
 
-    // const start = performance.now();
+    if (line.points.length === 1) {
+      // If only one point, draw a dot
+      return (
+        <circle
+          cx={line.points[0].x}
+          cy={line.points[0].y}
+          r={line.width / 2}
+          fill={line.color}
+        />
+      );
+    }
+
+    const start = performance.now();
     const pathData = pointsToPath(line.points, smoothing);
-    // const end = performance.now();
-    // console.log(`pointsToPath took ${end - start} ms`);
+    const end = performance.now();
+    if (end - start > 20) {
+      console.warn(
+        `pointsToPathJS took ${end - start} ms, which is longer than expected.`
+      );
+    }
 
     return (
       <path
