@@ -322,9 +322,10 @@ const DrawAreaControls = memo(
         {colorPalette.map((color) => (
           <button
             key={color}
-            className={`border-4 transition-all ${
-              color === strokeColor ? "w-4.5 h-4.5" : "w-5.5 h-5.5"
-            }`}
+            className={`border-4 transition-all 
+              ${color === strokeColor ? "w-4.5 h-4.5" : "w-5.5 h-5.5"}
+              ${color === strokeColor ? "1x:w-6 1x:h-6" : "1x:w-8 1x:h-8"}
+            `}
             style={{ backgroundColor: color }}
             onClick={() => {
               setStrokeColor(color);

@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
-const ROUND_DURATION = 30 * 1000; // 30 seconds
+const ROUND_DURATION = 300 * 1000; // 30 seconds
 const INTERVAL = 3 * 1000; // 3 second interval
 const NUM_ROUNDS = 2
 
