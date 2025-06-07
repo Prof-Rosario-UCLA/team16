@@ -4,6 +4,7 @@ import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import ClientNavbarWrapper from "@/components/ClientNavbarWrapper";
 import CookieBanner from "@/components/CookieBanner";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 const APP_NAME = "doodly";
 const APP_DEFAULT_TITLE = "doodly";
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${pressStart2P.variable} antialiased`}>
+        <ServiceWorkerRegistration />
         <UserProvider>
           <ClientNavbarWrapper />
           {children}
