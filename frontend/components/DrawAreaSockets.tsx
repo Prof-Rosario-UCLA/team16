@@ -56,7 +56,7 @@ const DrawAreaSockets = ({user} : {user: string | undefined}) => {
       setClearLocalTrigger((prev) => !prev);
     });
 
-    socket.on("reveal_info", ({ roundNum, currDrawer, wordLength }) => {
+    socket.on("reveal_info", ({ currDrawer }) => {
       setCurrDrawer(currDrawer);
     });
 
