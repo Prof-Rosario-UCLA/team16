@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
 // import { DrawingLineWasm } from "@/components/DrawingLineWasm";
 import { DrawingLine } from "@/components/DrawingLine";
+import playSound from "@/utils/playSound"
 import { pointsToPath } from "@/components/DrawingLine";
 // const USE_WASM = false;
 const Line = DrawingLine;
@@ -111,6 +112,44 @@ export default function DrawArea({
     setIsDrawing(false);
   }, [clearLocalTrigger]);
 
+  const audioRef = useRef<HTMLAudioElement>(new Audio("/media/drawing.mp3")); 
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    audio.preload = "auto";
+
+    const onEnded = () => {
+      if (isPlayingRef.current) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    };
+    audio.addEventListener("ended", onEnded);
+    audioRef.current = audio;
+
+    const onMouseUpWindow = () => {
+      if (isPlayingRef.current) {
+        isPlayingRef.current = false;
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+    window.addEventListener("mouseup", onMouseUpWindow);
+
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.pause();
+    };
+  }, []);
+
+  // const stopAudio = () => {
+  //   const audio = audioRef.current!;
+  //   isPlayingRef.current = false;
+  //   audio.pause();
+  //   audio.currentTime = 0;
+  // }
+
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
     if (isCurrDrawer) {
       // only start drawing if is curr drawer
@@ -128,6 +167,12 @@ export default function DrawArea({
       setLocalLines((prevLines) => [...prevLines, newLine]);
       setIsDrawing(true);
       onLineStart?.(newLine);
+
+      // play audio from begining
+      const audio = audioRef.current!;
+      isPlayingRef.current = true;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
     }
   };
 
@@ -232,10 +277,9 @@ export default function DrawArea({
             setLocalLines([]);
             onClear?.();
           }}
-        />
-      ) : (
-        <></>
-      )}
+          playSound={playSound}
+        /> : <></>
+      }
 
       {/* download */}
       <div className="absolute bottom-[-4.5em] right-0 text-xs">
@@ -258,6 +302,7 @@ interface DrawAreaControlsProps {
   setStrokeWidth: (width: number) => void;
   setErase: (erase: boolean) => void;
   clear: () => void;
+  playSound: (src: string) => void;
 }
 
 const DrawAreaControls = memo(
@@ -269,6 +314,7 @@ const DrawAreaControls = memo(
     setStrokeWidth,
     setErase,
     clear,
+    playSound
   }: DrawAreaControlsProps) => (
     <>
       {/* color palette */}
@@ -276,13 +322,15 @@ const DrawAreaControls = memo(
         {colorPalette.map((color) => (
           <button
             key={color}
-            className={`border-4 transition-all ${
-              color === strokeColor ? "w-6 h-6" : "w-8 h-8"
-            }`}
+            className={`border-4 transition-all 
+              ${color === strokeColor ? "w-4.5 h-4.5" : "w-5.5 h-5.5"}
+              ${color === strokeColor ? "1x:w-6 1x:h-6" : "1x:w-8 1x:h-8"}
+            `}
             style={{ backgroundColor: color }}
             onClick={() => {
               setStrokeColor(color);
               setErase(false);
+              playSound("click");
             }}
           />
         ))}
@@ -291,13 +339,19 @@ const DrawAreaControls = memo(
       {/* tool toggle */}
       <div className="flex flex-col absolute top-0 right-0 p-4 gap-2">
         <button
-          onClick={() => setErase(false)}
+          onClick={() => {
+            setErase(false)
+            playSound("click");
+          }}
           className={`size-8 ${erase ? "opacity-20" : ""}`}
         >
           <img src="/brush.png" alt="Brush" />
         </button>
         <button
-          onClick={() => setErase(true)}
+          onClick={() => {
+            setErase(true);
+            playSound("click");
+          }}
           className={`size-8 ${!erase ? "opacity-20" : ""}`}
         >
           <img src="/eraser.png" alt="Eraser" />
@@ -309,7 +363,10 @@ const DrawAreaControls = memo(
         {brushSizes.map((size, i) => (
           <button
             key={size}
-            onClick={() => setStrokeWidth(size)}
+            onClick={() => {
+              setStrokeWidth(size)
+              playSound("click");
+            }}
             className={`flex items-center justify-center py-2 ${
               strokeWidth !== size ? "opacity-50" : ""
             }`}
@@ -328,7 +385,10 @@ const DrawAreaControls = memo(
       </div>
 
       {/* clear */}
-      <button className="absolute bottom-0 right-0 p-2" onClick={clear}>
+      <button className="absolute bottom-0 right-0 p-2" onClick={() => {
+          clear();
+          playSound("click");
+        }}>
         <img src="/trash.png" alt="Clear" className="size-8" />
       </button>
     </>

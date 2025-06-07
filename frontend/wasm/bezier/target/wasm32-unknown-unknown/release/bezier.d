@@ -1,1 +1,0 @@
-/Users/jason/Desktop/School/UCLA/2024-25/spring\ 2025/CS144/team16/frontend/wasm/bezier/target/wasm32-unknown-unknown/release/bezier.wasm: /Users/jason/Desktop/School/UCLA/2024-25/spring\ 2025/CS144/team16/frontend/wasm/bezier/src/lib.rs
