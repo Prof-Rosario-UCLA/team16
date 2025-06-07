@@ -1,9 +1,4 @@
-const CACHE_NAME = 'my-cache-v3';
-
-// importScripts('/sw-manifest.js');
-// console.log("app shell\n", APP_SHELL)
-
-const APP_SHELL = [
+self.APP_SHELL = [
   "/_next/static/kBL9vQQeiAYNuBHrls_Vf/_buildManifest.js",
   "/_next/static/kBL9vQQeiAYNuBHrls_Vf/_ssgManifest.js",
   "/_next/static/chunks/4bd1b696-c248c594a1558fa0.js",
@@ -44,56 +39,3 @@ const APP_SHELL = [
   "/window.svg",
   "/icons/doodly-icon.png"
 ];
-
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      const urlsToCache = [
-        '/',
-        '/login',
-        '/offline.html',
-        '/icons/doodly-icon.png',
-        ...APP_SHELL,
-      ];
-
-      for (const url of urlsToCache) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error(`${url} returned ${response.status}`);
-          await cache.put(url, response.clone());
-        } catch (err) {
-          console.error(`Failed to cache ${url}:`, err);
-        }
-      }
-    })
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating.');
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      )
-    )
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  console.log('Fetching:', event.request.url);
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/');
-      })
-    );
-  } else {
-    // Optionally handle other requests (like images, scripts, etc.)
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
-  }
-});

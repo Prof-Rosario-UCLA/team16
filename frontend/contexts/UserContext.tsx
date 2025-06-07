@@ -24,8 +24,17 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     try {
       const res = await getUser();
       setUser(res.data);
+      localStorage.setItem("cachedUser", JSON.stringify(res.data));
     } catch (err) {
       console.warn("Not logged in:", err);
+      // const cached = localStorage.getItem("cachedUser");
+      // console.log("cached user", cached);
+      // if (cached) {
+      //   setUser(JSON.parse(cached));
+      // } else {
+      //   console.log("setting cached user to null");
+      //   setUser(null);
+      // }
       setUser(null);
     } finally {
       setLoading(false);
@@ -34,6 +43,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   useEffect(() => {
     fetchUser();
+    const cached = localStorage.getItem("cachedUser");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setUser(parsed);
+      } catch {}
+    }
   }, []);
 
   return (

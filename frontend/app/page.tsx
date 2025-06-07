@@ -10,9 +10,9 @@ export default function Home() {
   const { user, loading } = useUser() ?? {};
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login"); // user not logged in
-    }
+    // if (!loading && !user) {
+    //   router.push("/login"); // user not logged in
+    // }
   }, [user, loading, router]);
 
   const handleCreateGame = async () => {
