@@ -21,7 +21,7 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
-            - name: PWA_DEBUGGING
+            - name: NEXT_PUBLIC_PWA_DEBUGGING
               value: "false"
 # resources: # optional, for HPA
 #   requests:
