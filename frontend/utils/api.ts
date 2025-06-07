@@ -1,3 +1,4 @@
+import { LeaderboardResponse, User, UserStatsResponse } from "@/utils/types";
 import axios from "axios";
 
 export const baseURL =
@@ -34,9 +35,29 @@ export const logout = async () => {
   return res;
 };
 
-export const getUser = async () => {
+export const getUser = async (): Promise<User> => {
   const res = await axios.get(`${apiURL}/user/me`, {
     withCredentials: true,
   });
-  return res;
+  return res.data;
+};
+
+export const getLeaderboard = async (
+  sortKey: string = "wins"
+): Promise<LeaderboardResponse> => {
+  const params = { sort: sortKey };
+  const res = await axios.get(`${apiURL}/leaderboard`, {
+    withCredentials: true,
+    params,
+  });
+  return res.data;
+};
+
+export const getUserStats = async (
+  username: string
+): Promise<UserStatsResponse> => {
+  const res = await axios.get(`${apiURL}/user/${username}/stats`, {
+    withCredentials: true,
+  });
+  return res.data;
 };
