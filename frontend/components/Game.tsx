@@ -158,9 +158,15 @@ export default function Game({ gameId }: { gameId: string }) {
       {/* Top bar */}
       <div className="flex flex-row items-center w-full justify-center z-10">
         {!gameStarted ? (
-          <button className="nes-btn is-success" onClick={startGame}>
-            Start Game
-          </button>
+          players.length >= 2 ? (
+            <button className="nes-btn is-success" onClick={startGame}>
+              Start Game
+            </button>
+          ) : (
+            <div className="text-center text-lg font-bold">
+              Waiting for players...
+            </div>
+          )
         ) : (
           <div className="text-center text-lg font-bold">
             Round: {roundNum}
@@ -224,7 +230,7 @@ export default function Game({ gameId }: { gameId: string }) {
           ))}
         </div>
 
-        <DrawAreaSockets user={username} />
+        <DrawAreaSockets user={username} gameStarted={gameStarted} />
 
         <div className="h-full flex w-80">
           <GameChat />

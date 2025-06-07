@@ -1,6 +1,7 @@
 import { customAlphabet } from "nanoid";
 import { Game } from "../models/gameModel";
 import { updateUserStats } from "./userService";
+import { GameState } from "../sockets/gameSocket";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 
@@ -12,29 +13,6 @@ export const createGame = async () => {
 
 export const getGameById = async (gameId: string) => {
   return await Game.findOne({ gameId });
-};
-
-// temporary types until game logic is merged
-type Player = {
-  name: string;
-  points: number;
-  isDrawing: boolean;
-};
-
-type Round = {
-  roundNum: number | null;
-  drawerIndex: number | null;
-  endTime: number | null;
-  word: string | null;
-  activeGuessers: Map<string, boolean> | null; // maps usernames to booleans - if usr is still guessing, bool is True
-};
-type GameState = {
-  // js guarantees insertion order so this works!
-  // global line id to line
-  id: string;
-  players: Player[]; // player includes points
-  round: Round; // round info
-  status: string; // notStarted, active, ended
 };
 
 export const endGame = async (game: GameState) => {
@@ -69,4 +47,5 @@ export const endGame = async (game: GameState) => {
       })
     )
   );
+  console.log("Stats updated for players:", sortedPlayers);
 };

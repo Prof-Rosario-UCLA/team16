@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
+import { endGame, getGameById } from "../services/gameService";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 const ROUND_DURATION = 30 * 1000; // 30 seconds
@@ -37,7 +38,7 @@ type Round = {
   activeGuessers: Map<string, boolean> | null; // maps usernames to booleans - if usr is still guessing, bool is True
 };
 
-type GameState = {
+export type GameState = {
   // js guarantees insertion order so this works!
   // global line id to line
   id: string;
@@ -54,7 +55,15 @@ const dummyWords = ["giraffe", "elephant", "dog", "cat", "flower"];
 
 export function setupGameSocket(io: Server, socket: Socket) {
   // joining a game
-  socket.on("join_game", (gameId: string, cb?: () => void) => {
+  socket.on("join_game", async (gameId: string, cb?: () => void) => {
+    const validGame = await getGameById(gameId);
+    if (!validGame) {
+      socket.emit("error_message", {
+        message: "Game does not exist.",
+        redirectUrl: "/",
+      });
+      return;
+    }
     console.log("User connected", socket.data.user);
 
     socket.data.gameId = gameId;
@@ -62,8 +71,6 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     // create game state if it doesn't exist
     if (!games.has(gameId)) {
-      let usersToSocket = new Map<string, string>();
-      usersToSocket.set(socket.data.user, socket.id);
       games.set(gameId, {
         id: gameId,
         lines: new Map(),
@@ -76,7 +83,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           activeGuessers: null,
         },
         status: "notStarted",
-        usersToSocket: usersToSocket,
+        usersToSocket: new Map<string, string>(),
       });
     }
 
@@ -100,8 +107,20 @@ export function setupGameSocket(io: Server, socket: Socket) {
     }
 
     // update player list
+
     const playerExists = game.players.some((p) => p.name === socket.data.user);
-    if (!playerExists) {
+    if (playerExists) {
+      const existingSocketId = game.usersToSocket.get(socket.data.user);
+
+      // update socket id in game state
+      game.usersToSocket.set(socket.data.user, socket.id);
+
+      // redirect old tab to home page
+      io.to(existingSocketId!).emit("error_message", {
+        message: "Game joined in another tab, redirecting to home",
+        redirectUrl: "/",
+      });
+    } else {
       game.players.push({
         name: socket.data.user,
         points: 0,
@@ -279,7 +298,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       games.get(socket.data.gameId)?.lines.clear();
       io.to(gameId).emit("clear_lines");
       io.to(gameId).emit("game_ended", { game });
-      console.log(`Game ${gameId} ended`);
+      console.log(`Game ${gameId} ended, updating db...`);
+      endGame(game);
     }
   });
 
@@ -358,6 +378,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     if (!gameId || !games.has(gameId)) return;
     const game = games.get(gameId)!;
+
+    // old session, ignore
+    if (game.usersToSocket.get(user) !== socket.id) return;
 
     // remove player from game's player list
     game.players = game.players.filter((p) => p.name !== user);

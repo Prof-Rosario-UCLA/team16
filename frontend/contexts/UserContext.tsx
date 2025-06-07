@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { getUser } from "@/utils/api";
+import { User } from "@/utils/types";
 
 interface UserContextType {
-  user: unknown; // Replace 'any' with a more specific type if available
+  user: User | null;
   loading: boolean;
   fetchUser: () => Promise<void>;
 }
@@ -16,14 +17,15 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const res = await getUser();
-      setUser(res.data);
+      const data = await getUser();
+      setUser(data);
+      console.log("User fetched:", data);
     } catch (err) {
       console.warn("Not logged in:", err);
       setUser(null);
