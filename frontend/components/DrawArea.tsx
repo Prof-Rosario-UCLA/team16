@@ -60,6 +60,7 @@ interface DrawAreaProps {
   globalLines?: Line[];
   pruneLocalTrigger?: boolean;
   clearLocalTrigger?: boolean;
+  isCurrDrawer: boolean;
 }
 
 export default function DrawArea({
@@ -70,6 +71,7 @@ export default function DrawArea({
   globalLines = [],
   pruneLocalTrigger = false,
   clearLocalTrigger = false,
+  isCurrDrawer
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [localLines, setLocalLines] = useState<Line[]>([]);
@@ -111,20 +113,22 @@ export default function DrawArea({
   }, [clearLocalTrigger]);
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
-    // only start on left click
-    if (mouseEvent.button !== 0) return;
+    if (isCurrDrawer) { // only start drawing if is curr drawer
+      // only start on left click
+      if (mouseEvent.button !== 0) return;
 
-    const point = getSvgCoords(mouseEvent);
-    const newLine: Line = {
-      points: [point],
-      color: actualStrokeColor,
-      width: strokeWidth,
-      id: generateId(),
-    };
+      const point = getSvgCoords(mouseEvent);
+      const newLine: Line = {
+        points: [point],
+        color: actualStrokeColor,
+        width: strokeWidth,
+        id: generateId(),
+      };
 
-    setLocalLines((prevLines) => [...prevLines, newLine]);
-    setIsDrawing(true);
-    onLineStart?.(newLine);
+      setLocalLines((prevLines) => [...prevLines, newLine]);
+      setIsDrawing(true);
+      onLineStart?.(newLine);
+    }
   };
 
   useEffect(() => {
@@ -215,18 +219,22 @@ export default function DrawArea({
           <Line key={line.id} line={line} />
         ))}
       </svg>
-      <DrawAreaControls
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        erase={erase}
-        setStrokeColor={setStrokeColor}
-        setStrokeWidth={setStrokeWidth}
-        setErase={setErase}
-        clear={() => {
-          setLocalLines([]);
-          onClear?.();
-        }}
-      />
+      
+      { isCurrDrawer ? // render controls only if is curr drawer
+        <DrawAreaControls
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          erase={erase}
+          setStrokeColor={setStrokeColor}
+          setStrokeWidth={setStrokeWidth}
+          setErase={setErase}
+          clear={() => {
+            setLocalLines([]);
+            onClear?.();
+          }}
+        /> : <></>
+      }
+
       {/* download */}
       <div className="absolute bottom-[-4.5em] right-0 text-xs">
         <button
