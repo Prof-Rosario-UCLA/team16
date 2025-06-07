@@ -1,3 +1,4 @@
+import { LeaderboardEntry, LeaderboardResponse } from "@/utils/types";
 import axios from "axios";
 
 export const baseURL =
@@ -39,4 +40,11 @@ export const getUser = async () => {
     withCredentials: true,
   });
   return res;
+};
+
+export const getLeaderboard = async (): Promise<LeaderboardResponse> => {
+  const res = await axios.get(`${apiURL}/leaderboard`, {
+    withCredentials: true,
+  });
+  return res.data;
 };
