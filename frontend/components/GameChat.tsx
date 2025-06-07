@@ -54,6 +54,15 @@ export default function GameChat({user} : {user: string | undefined}) {
         ...prevMessages,
       ]);
     });
+    socket.on("correct_guess", (message: Message) => {
+      setMessages((prevMessages) => [
+        { 
+          message: `${message.user} guessed the word correctly!`,
+          isPublic: true
+        },
+        ...prevMessages,
+      ]);
+    });
     return () => {
       socket.off("receive_message");
       socket.off("user_joined");
@@ -76,19 +85,21 @@ export default function GameChat({user} : {user: string | undefined}) {
             <div key={index}>
               {
                 message.isPublic ?
-                    <>
+                    <span>
                       {message.user && (
                         <span className="nes-text is-success">{`${message.user} `}</span>
                       )}
                       <span>{message.message}</span>
-                    </> 
+                    </span> 
                   :
-                    <>
+                    <span
+                      className="bg-green-300 text-white px-2 py-1 rounded-md inline-block"
+                    >
                       { message.user && (
-                        <span className="nes-text is-success">{`${message.user} `}</span>
+                        <span className="nes-text">{`${message.user} `}</span>
                       )}
-                      <span className="bg-green">{message.message + "HIDE"}</span>
-                    </>
+                      <span>{message.message}</span>
+                    </span>
               }
             </div>
           ))

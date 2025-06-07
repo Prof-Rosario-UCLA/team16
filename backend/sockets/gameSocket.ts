@@ -292,6 +292,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
           game.round.activeGuessers?.set(user, false) 
           
           // share that user guessed correctly TODO use same arch as user_joined/user_left
+          io.to(gameId).emit("correct_guess", { 
+            user: user
+          });
 
           // update users points TODO
         }
