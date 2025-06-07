@@ -4,13 +4,12 @@
 import { memo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
-import { DrawingLineWasm } from "@/components/DrawingLineWasm";
+// import { DrawingLineWasm } from "@/components/DrawingLineWasm";
 import { DrawingLine } from "@/components/DrawingLine";
-import { pointsToPathWasm } from "@/utils/pointsToPathWasm";
 import playSound from "@/utils/playSound"
-
-const USE_WASM = false;
-const Line = USE_WASM ? DrawingLineWasm : DrawingLine;
+import { pointsToPath } from "@/components/DrawingLine";
+// const USE_WASM = false;
+const Line = DrawingLine;
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 
@@ -72,7 +71,7 @@ export default function DrawArea({
   globalLines = [],
   pruneLocalTrigger = false,
   clearLocalTrigger = false,
-  isCurrDrawer
+  isCurrDrawer,
 }: DrawAreaProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [localLines, setLocalLines] = useState<Line[]>([]);
@@ -152,7 +151,8 @@ export default function DrawArea({
   // }
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
-    if (isCurrDrawer) { // only start drawing if is curr drawer
+    if (isCurrDrawer) {
+      // only start drawing if is curr drawer
       // only start on left click
       if (mouseEvent.button !== 0) return;
 
@@ -264,8 +264,8 @@ export default function DrawArea({
           <Line key={line.id} line={line} />
         ))}
       </svg>
-      
-      { isCurrDrawer ? // render controls only if is curr drawer
+
+      {isCurrDrawer ? ( // render controls only if is curr drawer
         <DrawAreaControls
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
@@ -414,7 +414,7 @@ const exportDrawing = (lines: Line[]) => {
     ctx.lineWidth = line.width;
     ctx.beginPath();
     const path = new Path2D();
-    path.addPath(new Path2D(pointsToPathWasm(line.points, 0.2)));
+    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
     ctx.stroke(path);
   });
   const img = new Image();
