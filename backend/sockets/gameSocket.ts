@@ -277,7 +277,6 @@ export function setupGameSocket(io: Server, socket: Socket) {
   socket.on("send_message", (message: string) => {
     console.log("User sent message", message);
     let isPublic : (boolean | undefined) = true;
-    let activePlayers = new Array();
 
     const gameId = socket.data.gameId;
     if (gameId) {
@@ -291,11 +290,6 @@ export function setupGameSocket(io: Server, socket: Socket) {
           // remove user from active guessers
           game.round.activeGuessers?.set(user, false) 
           
-          // // share that user guessed correctly
-          // io.to(gameId).emit("correct_guess", { 
-          //   user: user
-          // });
-
           // update users points. score is number of (ms until round.endTime) / 100
           if (game.round.endTime) {
             const score = Math.round((game.round.endTime - Date.now()) / 100);
@@ -316,16 +310,13 @@ export function setupGameSocket(io: Server, socket: Socket) {
       }
       // if user is the drawer or guessed correctly, will be set to false
       isPublic = (typeof game.round.activeGuessers?.get(user) !== "undefined") ? game.round.activeGuessers?.get(user) : true;
-      if (game.round.activeGuessers != null){
-        activePlayers = Array.from(game.round.activeGuessers!.entries());
-      }
 
       if (isPublic) { // if public message, broadcast to everyone
         io.in(socket.data.gameId).emit("receive_message", { 
           message,
           user: socket.data.user,
           isPublic: isPublic
-        }, JSON.stringify(activePlayers));
+        });
       } else { // otherwise, send to all non active guessers
         game.round.activeGuessers?.forEach((isGuessing: boolean, playerId: string) => {
           if (!isGuessing) { 
@@ -341,13 +332,6 @@ export function setupGameSocket(io: Server, socket: Socket) {
         })
       }
     }
-      
-    // io.in(socket.data.gameId).emit("receive_message", { 
-    //   message,
-    //   user: socket.data.user,
-    //   isPublic: isPublic
-    // }, JSON.stringify(activePlayers));
-    
   });
 
   socket.on("disconnect", () => {

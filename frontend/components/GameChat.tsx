@@ -7,34 +7,17 @@ type Message = {
   isPublic: boolean;
 };
 
-type User = {
-  username: string
-}
-
-export default function GameChat({user} : {user: string | undefined}) {
+export default function GameChat() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activePlayers, setActivePlayers] = useState<Map<string, boolean>>(new Map<string, boolean>());
   const [input, setInput] = useState("");
 
   const socket = useSocketContext();
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("receive_message", (message: Message, rawActivePlayers: string) => {
+    socket.on("receive_message", (message: Message) => {
       // insert new message into messages
       setMessages((prevMessages) => [message, ...prevMessages]);
-      
-      if (rawActivePlayers != null) {
-        console.log(rawActivePlayers)
-        
-        // convert JSON to a Map
-        const parsedArray: [string, boolean][] = JSON.parse(rawActivePlayers);
-        const playersMap = new Map<string, boolean>(parsedArray);
-
-         // set activePlayers
-        setActivePlayers(playersMap);
-        console.log(playersMap);
-      }
     });
     socket.on("user_joined", (message: Message) => {
       setMessages((prevMessages) => [
@@ -69,12 +52,7 @@ export default function GameChat({user} : {user: string | undefined}) {
       socket.off("user_left");
     };
   }, [socket]);
-
-  let username = (typeof user !== "undefined") ? user : "";
   
-  // if user hasn't guessed the word yet, filter out the non public messages
-  // let newMessages = messages.filter((msg) => msg.isPublic)
-
   return (
     <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs">
       <div className="!p-4 flex-grow overflow-y-auto flex flex-col-reverse gap-2 nes-container bg-white">
