@@ -9,8 +9,8 @@
   "description": "A fun drawing game where you can draw and guess doodles with friends.",
   "icons": [
     {
-      "sizes": "192x192",
-      "src": "icons/android-chrome-192x192.png",
+      "sizes": "512x512",
+      "src": "icons/doodly-icon.png",
       "type": "image/png"
     }
   ]

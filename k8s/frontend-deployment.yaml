@@ -21,6 +21,8 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
+            - name: PWA_DEBUGGING
+              value: "false"
 # resources: # optional, for HPA
 #   requests:
 #     cpu: "500m"
