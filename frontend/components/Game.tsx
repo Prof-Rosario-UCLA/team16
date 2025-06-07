@@ -229,7 +229,7 @@ export default function Game({ gameId }: { gameId: string }) {
 
         <DrawAreaSockets user={username} />
 
-        <div className="h-full flex min-w-80">
+        <div className="h-full flex w-80">
           <GameChat />
         </div>
       </div>
