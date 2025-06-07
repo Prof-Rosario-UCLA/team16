@@ -20,6 +20,8 @@ export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
   const { user } = useUser() as { user?: User };
 
+  const username = user?.username;
+
   // const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
@@ -223,12 +225,10 @@ export default function Game({ gameId }: { gameId: string }) {
         ))}
       </div>
 
-      <DrawAreaSockets
-        user={user?.username}
-      />
+      <DrawAreaSockets user={username}/>
 
       <div className="h-full flex min-w-80">
-        <GameChat />
+        <GameChat user={username}/>
       </div>
     </div>
   </div>
