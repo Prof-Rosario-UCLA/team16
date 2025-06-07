@@ -278,7 +278,7 @@ export default function DrawArea({
             onClear?.();
           }}
           playSound={playSound}
-        /> : <></>
+        />) : <></>
       }
 
       {/* download */}
