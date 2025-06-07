@@ -85,13 +85,17 @@ export function setupGameSocket(io: Server, socket: Socket) {
     if (game.status === "active") {
       socket.emit("error_message", {
         message: "Game already started. Cannot join.",
+        redirectUrl: "/",
       });
       return;
     }
 
     // cannot join a game that has ended
     if (game.status === "ended") {
-      socket.emit("error_message", { message: "Game has ended. Cannot join." });
+      socket.emit("error_message", {
+        message: "Game has ended. Cannot join.",
+        redirectUrl: "/",
+      });
       return;
     }
 

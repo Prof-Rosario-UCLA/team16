@@ -66,13 +66,10 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
-    socket.on("error_message", ({ message }) => {
+    socket.on("error_message", ({ message, redirectUrl }) => {
       alert(message);
-      if (
-        message === "Game already started. Cannot join." ||
-        message === "Game has ended. Cannot join."
-      ) {
-        router.push("/"); // return to home screen
+      if (redirectUrl) {
+        router.push(redirectUrl);
       }
     });
 
