@@ -1,0 +1,17 @@
+{
+  "name": "doodly PWA App",
+  "short_name": "doodly",
+  "theme_color": "#8936FF",
+  "background_color": "#333333",
+  "start_url": "/",
+  "id": "doodly",
+  "display": "standalone",
+  "description": "A fun drawing game where you can draw and guess doodles with friends.",
+  "icons": [
+    {
+      "sizes": "192x192",
+      "src": "icons/android-chrome-192x192.png",
+      "type": "image/png"
+    }
+  ]
+}
