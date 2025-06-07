@@ -3,6 +3,8 @@ WORKDIR /app
 
 # install deps
 COPY package*.json ./
+# needed for wasm build during npm install
+COPY wasm ./wasm
 RUN npm install
 
 # copy source
