@@ -64,6 +64,10 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
+    socket.on("correct_guess", ({ players }) => {
+      setPlayers(players);
+    })
+
     socket.on("error_message", ({ message }) => {
       alert(message);
       if (message === "Game already started. Cannot join." || message === "Game has ended. Cannot join.") {

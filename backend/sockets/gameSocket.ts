@@ -291,12 +291,27 @@ export function setupGameSocket(io: Server, socket: Socket) {
           // remove user from active guessers
           game.round.activeGuessers?.set(user, false) 
           
-          // share that user guessed correctly TODO use same arch as user_joined/user_left
-          io.to(gameId).emit("correct_guess", { 
-            user: user
-          });
+          // // share that user guessed correctly
+          // io.to(gameId).emit("correct_guess", { 
+          //   user: user
+          // });
 
-          // update users points TODO
+          // update users points. score is number of (ms until round.endTime) / 100
+          if (game.round.endTime) {
+            const score = Math.round((game.round.endTime - Date.now()) / 100);
+            game.players.forEach((player: Player) => {
+              if (player.name === user) {
+                player.points += score;
+                console.log(game.players);
+
+                // share that user guessed correctly
+                io.to(gameId).emit("correct_guess", { 
+                  user: user,
+                  players: game.players
+                });
+              }
+            })
+          }
         }
       }
       // if user is the drawer or guessed correctly, will be set to false
