@@ -20,6 +20,8 @@ export default function Game({ gameId }: { gameId: string }) {
   const socket = useSocketContext();
   const { user } = useUser() as { user?: User };
 
+  const username = user?.username;
+
   // const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
@@ -57,6 +59,10 @@ export default function Game({ gameId }: { gameId: string }) {
     });
 
     socket.on("user_left", ({ players }) => {
+      setPlayers(players);
+    });
+
+    socket.on("correct_guess", ({ players }) => {
       setPlayers(players);
     });
 
@@ -221,9 +227,9 @@ export default function Game({ gameId }: { gameId: string }) {
           ))}
         </div>
 
-        <DrawAreaSockets />
+        <DrawAreaSockets user={username} />
 
-        <div className="h-full flex min-w-80">
+        <div className="h-full flex w-80">
           <GameChat />
         </div>
       </div>

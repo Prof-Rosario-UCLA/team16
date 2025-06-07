@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
-const ROUND_DURATION = 10 * 1000; // 30 seconds
+const ROUND_DURATION = 30 * 1000; // 30 seconds
 const INTERVAL = 3 * 1000; // 3 second interval
 const NUM_ROUNDS = 2;
 
@@ -34,6 +34,7 @@ type Round = {
   drawerIndex: number | null;
   endTime: number | null;
   word: string | null;
+  activeGuessers: Map<string, boolean> | null; // maps usernames to booleans - if usr is still guessing, bool is True
 };
 
 type GameState = {
@@ -44,6 +45,7 @@ type GameState = {
   players: Player[]; // player includes points
   round: Round; // round info
   status: string; // notStarted, active, ended
+  usersToSocket: Map<string, string>; // every game room should have at least one user in it
 };
 
 const games = new Map<string, GameState>();
@@ -60,6 +62,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     // create game state if it doesn't exist
     if (!games.has(gameId)) {
+      let usersToSocket = new Map<string, string>();
+      usersToSocket.set(socket.data.user, socket.id);
       games.set(gameId, {
         id: gameId,
         lines: new Map(),
@@ -69,8 +73,10 @@ export function setupGameSocket(io: Server, socket: Socket) {
           drawerIndex: null,
           endTime: null,
           word: null,
+          activeGuessers: null,
         },
         status: "notStarted",
+        usersToSocket: usersToSocket,
       });
     }
 
@@ -97,11 +103,13 @@ export function setupGameSocket(io: Server, socket: Socket) {
         points: 0,
         isDrawing: false,
       } as Player);
+      game.usersToSocket.set(socket.data.user, socket.id);
     }
 
     socket.join(gameId);
 
     io.to(gameId).emit("user_joined", {
+      // frontend handle add user
       user: socket.data.user,
       players: game.players,
     });
@@ -116,9 +124,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       const game = games.get(gameId)!;
       // don't start game if < 2 players
       if (game.players.length < 2) {
-        io.to(gameId).emit("error_message", {
-          message: "Need at least 2 players to start.",
-        });
+        const message = `Need at least 2 players to start. ${game.players}`;
+        io.to(gameId).emit("error_message", { message: message });
         return;
       }
       const drawerIndex = 0;
@@ -128,11 +135,23 @@ export function setupGameSocket(io: Server, socket: Socket) {
       games.get(socket.data.gameId)?.lines.clear();
       io.to(gameId).emit("clear_lines");
 
+      // initialize active guessers map
+      let activeGuessers = new Map<string, boolean>();
+      game.players.forEach((player, index) => {
+        if (index != drawerIndex) {
+          activeGuessers.set(player.name, true);
+        } else {
+          activeGuessers.set(player.name, false);
+        }
+      });
+
+      // initialize first round
       game.round = {
         roundNum: 1,
         drawerIndex,
         endTime: null, // don't set endTime yet (don't start immediately)
         word,
+        activeGuessers: activeGuessers,
       };
       game.status = "active";
 
@@ -193,12 +212,22 @@ export function setupGameSocket(io: Server, socket: Socket) {
         return;
       }
 
+      let newActiveGuessers = new Map<string, boolean>();
+      game.players.forEach((player, index) => {
+        if (index != nextDrawerIndex) {
+          newActiveGuessers.set(player.name, true);
+        } else {
+          newActiveGuessers.set(player.name, false);
+        }
+      });
+
       // update game.round
       game.round = {
         roundNum: nextRoundNum,
         drawerIndex: nextDrawerIndex,
         endTime: null,
         word: nextWord,
+        activeGuessers: newActiveGuessers,
       };
 
       // clear canvas
@@ -239,6 +268,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
         drawerIndex: null,
         endTime: null,
         word: null,
+        activeGuessers: null,
       };
       game.status = "ended";
 
@@ -252,10 +282,69 @@ export function setupGameSocket(io: Server, socket: Socket) {
   // chat
   socket.on("send_message", (message: string) => {
     console.log("User sent message", message);
-    io.in(socket.data.gameId).emit("receive_message", {
-      message,
-      user: socket.data.user,
-    });
+    let isPublic: boolean | undefined = true;
+
+    const gameId = socket.data.gameId;
+    if (gameId) {
+      const game = games.get(gameId)!;
+      let user = socket.data.user;
+
+      // if user is still guessing, check if their message was the correct guess
+      if (game.round.activeGuessers?.get(user)) {
+        if (message === game.round.word) {
+          console.log(`${user} guessed the word correctly!`);
+          // remove user from active guessers
+          game.round.activeGuessers?.set(user, false);
+
+          // update users points. score is number of (ms until round.endTime) / 100
+          if (game.round.endTime) {
+            const score = Math.round((game.round.endTime - Date.now()) / 100);
+            game.players.forEach((player: Player) => {
+              if (player.name === user) {
+                player.points += score;
+                console.log(game.players);
+
+                // share that user guessed correctly
+                io.to(gameId).emit("correct_guess", {
+                  user: user,
+                  players: game.players,
+                });
+              }
+            });
+          }
+        }
+      }
+      // if user is the drawer or guessed correctly, will be set to false
+      isPublic =
+        typeof game.round.activeGuessers?.get(user) !== "undefined"
+          ? game.round.activeGuessers?.get(user)
+          : true;
+
+      if (isPublic) {
+        // if public message, broadcast to everyone
+        io.in(socket.data.gameId).emit("receive_message", {
+          message,
+          user: socket.data.user,
+          isPublic: isPublic,
+        });
+      } else {
+        // otherwise, send to all non active guessers
+        game.round.activeGuessers?.forEach(
+          (isGuessing: boolean, playerId: string) => {
+            if (!isGuessing) {
+              const playerSocketId = game.usersToSocket.get(playerId);
+              if (playerSocketId) {
+                io.to(playerSocketId).emit("receive_message", {
+                  message,
+                  user,
+                  isPublic: isPublic,
+                });
+              }
+            }
+          }
+        );
+      }
+    }
   });
 
   socket.on("disconnect", () => {
@@ -286,6 +375,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
         drawerIndex: null,
         endTime: null,
         word: null,
+        activeGuessers: null,
       };
     }
 
