@@ -237,6 +237,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
       const drawerSocket = [...io.sockets.sockets.values()].find(
         (s) => s.data.user === game.players[nextDrawerIndex].name && s.data.gameId === gameId
       );
+      
       if (drawerSocket) {
         drawerSocket.emit("reveal_word", { word: nextWord });
       }

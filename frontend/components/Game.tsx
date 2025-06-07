@@ -4,6 +4,7 @@ import { useSocketContext } from "@/contexts/SocketContext";
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
+import playSound from "@/utils/playSound";
 
 type User = {
   username: string;
@@ -52,10 +53,12 @@ export default function Game({ gameId }: { gameId: string }) {
     if (!socket) return;
     socket.emit("join_game", gameId, () => {
       console.log("Connected to game:", gameId);
+      // playSound("join");
     });
 
     socket.on("user_joined", ({ players }) => {
       setPlayers(players);
+      // playSound("join");
     });
 
     socket.on("user_left", ({ players }) => {
@@ -83,6 +86,7 @@ export default function Game({ gameId }: { gameId: string }) {
       setCurrDrawer(currDrawer);
       setWordLength(wordLength);
       setTurnActive(false);
+      playSound("newround");
     });
 
     socket.on("reveal_word", ({ word }) => {
