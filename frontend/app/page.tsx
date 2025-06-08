@@ -10,16 +10,25 @@ export default function Home() {
   const { user, loading } = useUser() ?? {};
 
   useEffect(() => {
-    // if (!loading && !user) {
-    //   router.push("/login"); // user not logged in
-    // }
+    if (!loading && !user) {
+      router.push("/login"); // user not logged in
+    }
   }, [user, loading, router]);
 
   const handleCreateGame = async () => {
+    if (!navigator.onLine) {
+      router.push("/offlineGame");
+      return;
+    }
     const res = await createGame();
     const gameId = res.data.id;
+    if (!gameId) {
+      router.push("/offlineGame");
+      return;
+    }
     router.push(`/game/${gameId}`);
   };
+
 
   if (loading)
     return (

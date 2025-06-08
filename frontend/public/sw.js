@@ -1,44 +1,17 @@
-const CACHE_NAME = 'my-cache-v3';
-
-// importScripts('/sw-manifest.js');
-// console.log("app shell\n", APP_SHELL)
+const CACHE_NAME = 'my-cache-v7';
 
 const APP_SHELL = [
-  "/_next/static/kBL9vQQeiAYNuBHrls_Vf/_buildManifest.js",
-  "/_next/static/kBL9vQQeiAYNuBHrls_Vf/_ssgManifest.js",
-  "/_next/static/chunks/4bd1b696-c248c594a1558fa0.js",
-  "/_next/static/chunks/684-1e7e62f08be53352.js",
-  "/_next/static/chunks/794-c23ea5877af3791d.js",
-  "/_next/static/chunks/865-27635eb41cc46f4d.js",
-  "/_next/static/chunks/874-7bd9de28b52064df.js",
-  "/_next/static/chunks/framework-f593a28cde54158e.js",
-  "/_next/static/chunks/main-app-c1246293a3b31cdd.js",
-  "/_next/static/chunks/main-fd4a0e16a8e249ef.js",
-  "/_next/static/chunks/polyfills-42372ed130431b0a.js",
-  "/_next/static/chunks/webpack-9bf280e6e7c51f10.js",
-  "/_next/static/css/1ba6c33ea9d15b5b.css",
-  "/_next/static/css/e865312d0d25abcb.css",
-  "/_next/static/media/31dd38bdb4daced8-s.woff2",
-  "/_next/static/media/3511decdf5d10790-s.woff2",
-  "/_next/static/media/60c1b9efbca49fe9-s.woff2",
-  "/_next/static/media/999f4d94c8b14f83-s.woff2",
-  "/_next/static/media/9b8c15de1de72117-s.p.woff2",
-  "/_next/static/chunks/app/layout-7ebec1bcee34f0aa.js",
-  "/_next/static/chunks/app/page-1b2027523481197a.js",
-  "/_next/static/chunks/pages/_app-da15c11dea942c36.js",
-  "/_next/static/chunks/pages/_error-cc3f077a18ea1793.js",
-  "/_next/static/chunks/app/_not-found/page-5f830dc224f03a12.js",
-  "/_next/static/chunks/app/game/page-c11c0a762289eabf.js",
-  "/_next/static/chunks/app/login/page-875f0b185c8bba83.js",
-  "/_next/static/chunks/app/register/page-370983d1185c0fb1.js",
-  "/_next/static/chunks/app/game/[gameId]/page-6d4b63f588422c7b.js",
+  "/",
+  "/login",
+  "/register",
+  "/offlineGame",
+  "/offline.html",
   "/brush.png",
   "/circle.png",
   "/eraser.png",
   "/file.svg",
   "/globe.svg",
   "/next.svg",
-  "/offline.html",
   "/trash.png",
   "/vercel.svg",
   "/window.svg",
@@ -46,30 +19,30 @@ const APP_SHELL = [
 ];
 
 
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      const urlsToCache = [
-        '/',
-        '/login',
-        '/offline.html',
-        '/icons/doodly-icon.png',
-        ...APP_SHELL,
-      ];
+      const urlsToCache = APP_SHELL;
 
-      for (const url of urlsToCache) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error(`${url} returned ${response.status}`);
-          await cache.put(url, response.clone());
-        } catch (err) {
-          console.error(`Failed to cache ${url}:`, err);
-        }
-      }
+      await Promise.all(
+        urlsToCache.map(async (url) => {
+          try {
+            const response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) throw new Error(`${url} failed with ${response.status}`);
+            await cache.put(url, response);
+          } catch (err) {
+            console.warn(`Skipping failed cache for: ${url}`, err);
+          }
+        })
+      );
+    }).catch((err) => {
+      console.error('Install failed:', err);
     })
   );
   self.skipWaiting();
 });
+
 
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating.');
@@ -82,18 +55,56 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  console.log('Fetching:', event.request.url);
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/');
-      })
-    );
+
+async function cacheFirstStrategy(request) {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const cachedResponse = await cache.match(request);
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    const networkResponse = await fetch(request, { credentials: 'include'});
+    const responseClone = networkResponse.clone();
+    await cache.put(request, responseClone);
+    return networkResponse;
+  } catch (error) {
+    console.error("Cache first strategy failed:", error);
+    // Fallback: serve offline page if available
+    return caches.match("/offline.html");
+  }
+}
+
+async function fetchComponents(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(request, { credentials: 'include' });
+    const responseClone = response.clone();
+    await cache.put(request, responseClone);
+    return response;
+  } catch (error) {
+    console.log(`Dyanmic caching failed with ${error}, falling back to cache for: ${request.url}`);
+    return caches.match(request);
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+
+  if (request.mode === "navigate") {
+    event.respondWith(cacheFirstStrategy(request));
   } else {
-    // Optionally handle other requests (like images, scripts, etc.)
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/api/game')) {
+      // Special case for /game/[gameId] pages
+      event.respondWith(
+        fetch(request).catch(() => caches.match("/offlineGame"))
+      );
+    }
+    else {
+      event.respondWith(fetchComponents(request));
+    }
   }
 });
