@@ -24,8 +24,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     setLoading(true);
     try {
       const res = await getUser();
-      setUser(res.data);
-      localStorage.setItem("cachedUser", JSON.stringify(res.data));
+      setUser(res);
+      localStorage.setItem("cachedUser", JSON.stringify(res));
     } catch (err) {
       console.warn("Not logged in:", err);
       const cached = localStorage.getItem("cachedUser");
