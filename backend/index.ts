@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
+import cacheManager from "cache-manager";
 import http from "http";
 import gameRoutes from "./routes/gameRoutes";
 import testRoutes from "./routes/testRoutes";
@@ -16,6 +17,7 @@ import { verifyToken } from "./utils/auth";
 import cookieParser from "cookie-parser";
 import * as cookie from "cookie";
 import jwt from "jsonwebtoken";
+import leaderboardRoutes from "./routes/leaderboardRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -57,6 +59,7 @@ app.use(verifyToken); // apply auth middleware to all routes below this line
 app.use("/api/user", userRoutes);
 app.use("/api/game", gameRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 // socket.io logic
 // auth
