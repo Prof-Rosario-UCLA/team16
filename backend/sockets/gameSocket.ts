@@ -1,6 +1,10 @@
 import { Server, Socket } from "socket.io";
 import { customAlphabet } from "nanoid";
-import { endGame, getGameById } from "../services/gameService";
+import {
+  dbOnGameEnd,
+  getGameStatus,
+  setGameStatus,
+} from "../services/gameService";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 const ROUND_DURATION = 30 * 1000; // 30 seconds
@@ -56,14 +60,30 @@ const dummyWords = ["giraffe", "elephant", "dog", "cat", "flower"];
 export function setupGameSocket(io: Server, socket: Socket) {
   // joining a game
   socket.on("join_game", async (gameId: string, cb?: () => void) => {
-    const validGame = await getGameById(gameId);
-    if (!validGame) {
-      socket.emit("error_message", {
-        message: "Game does not exist.",
-        redirectUrl: "/",
-      });
-      return;
+    const gameStatus = await getGameStatus(gameId);
+
+    switch (gameStatus) {
+      case null:
+      case undefined:
+        socket.emit("error_message", {
+          message: "Game does not exist",
+          redirectUrl: "/",
+        });
+        return;
+      case "in_progress":
+        socket.emit("error_message", {
+          message: "Game already started, cannot join",
+          redirectUrl: "/",
+        });
+        return;
+      case "finished":
+        socket.emit("error_message", {
+          message: "Game ended, cannot join",
+          redirectUrl: "/",
+        });
+        return;
     }
+
     console.log("User connected", socket.data.user);
 
     socket.data.gameId = gameId;
@@ -87,27 +107,9 @@ export function setupGameSocket(io: Server, socket: Socket) {
       });
     }
 
-    // cannot join a game that has already begun
-    const game = games.get(gameId)!;
-    if (game.status === "active") {
-      socket.emit("error_message", {
-        message: "Game already started. Cannot join.",
-        redirectUrl: "/",
-      });
-      return;
-    }
-
-    // cannot join a game that has ended
-    if (game.status === "ended") {
-      socket.emit("error_message", {
-        message: "Game has ended. Cannot join.",
-        redirectUrl: "/",
-      });
-      return;
-    }
+    const game = games.get(gameId)!; // we already checked that game exists above
 
     // update player list
-
     const playerExists = game.players.some((p) => p.name === socket.data.user);
     if (playerExists) {
       const existingSocketId = game.usersToSocket.get(socket.data.user);
@@ -140,7 +142,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     if (cb) cb();
   });
 
-  socket.on("start_game", () => {
+  socket.on("start_game", async () => {
     const gameId = socket.data.gameId;
 
     if (gameId) {
@@ -151,6 +153,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
         io.to(gameId).emit("error_message", { message: message });
         return;
       }
+      await setGameStatus(gameId, "in_progress");
+
       const drawerIndex = 0;
       const word = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: pull from database
 
@@ -230,8 +234,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
         dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: fetch from database
 
       if (nextRoundNum > NUM_ROUNDS) {
-        game.status = "ended";
-        io.to(gameId).emit("game_ended", { game });
+        onGameEnd(game);
         return;
       }
 
@@ -268,7 +271,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           s.data.user === game.players[nextDrawerIndex].name &&
           s.data.gameId === gameId
       );
-      
+
       if (drawerSocket) {
         drawerSocket.emit("reveal_word", { word: nextWord });
       }
@@ -287,20 +290,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     const gameId = socket.data.gameId;
     if (gameId) {
       const game = games.get(gameId)!;
-      game.round = {
-        roundNum: null,
-        drawerIndex: null,
-        endTime: null,
-        word: null,
-        activeGuessers: null,
-      };
-      game.status = "ended";
-
-      games.get(socket.data.gameId)?.lines.clear();
-      io.to(gameId).emit("clear_lines");
-      io.to(gameId).emit("game_ended", { game });
-      console.log(`Game ${gameId} ended, updating db...`);
-      endGame(game);
+      onGameEnd(game);
     }
   });
 
@@ -391,23 +381,13 @@ export function setupGameSocket(io: Server, socket: Socket) {
       players: game.players,
     });
 
+    console.log("User disconnected", socket.data.user);
     if (game.players.length < 2 && game.status === "active") {
-      game.status = "ended";
       io.to(gameId).emit("error_message", {
         message: "Not enough players remaining. Ending game.",
       });
-      io.to(gameId).emit("game_ended", { game });
-
-      game.round = {
-        roundNum: null,
-        drawerIndex: null,
-        endTime: null,
-        word: null,
-        activeGuessers: null,
-      };
+      onGameEnd(game);
     }
-
-    console.log("User disconnected", socket.data.user);
   });
 
   // drawing
@@ -463,4 +443,20 @@ export function setupGameSocket(io: Server, socket: Socket) {
     games.get(socket.data.gameId)?.lines.clear();
     socket.to(socket.data.gameId).emit("clear_lines");
   });
+
+  const onGameEnd = (game: GameState) => {
+    console.log(`Game ${game.id} ended, updating db...`);
+    dbOnGameEnd(game);
+    game.round = {
+      roundNum: null,
+      drawerIndex: null,
+      endTime: null,
+      word: null,
+      activeGuessers: null,
+    };
+    // io.to(game.id).emit("clear_lines"); // do we really need to clear lines on game end?
+    io.to(game.id).emit("game_ended", { game });
+    // free up some memory
+    games.delete(game.id);
+  };
 }

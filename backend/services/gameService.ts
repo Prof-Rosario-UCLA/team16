@@ -11,11 +11,19 @@ export const createGame = async () => {
   return gameId;
 };
 
-export const getGameById = async (gameId: string) => {
-  return await Game.findOne({ gameId });
+export const getGameStatus = async (gameId: string) => {
+  const game = await Game.findOne({ gameId });
+  return game?.status;
 };
 
-export const endGame = async (game: GameState) => {
+export const setGameStatus = async (
+  gameId: string,
+  status: "pending" | "in_progress" | "finished"
+) => {
+  await Game.findOneAndUpdate({ gameId }, { status });
+};
+
+export const dbOnGameEnd = async (game: GameState) => {
   const sortedPlayers = game.players.sort((a, b) => {
     if (b.points !== a.points) {
       return b.points - a.points;
