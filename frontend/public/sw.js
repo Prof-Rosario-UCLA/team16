@@ -78,7 +78,15 @@ async function cacheFirstStrategy(request) {
 
 async function fetchComponents(request) {
   if (request.method !== 'GET') {
-    return fetch(request); 
+    try {
+      return await fetch(request); 
+    } catch (error) {
+      console.error(`Network request failed for ${request.url}:`, error);
+      return new Response(
+        JSON.stringify({ error: "Network error. Try again later." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
   }
 
   const cache = await caches.open(CACHE_NAME);
