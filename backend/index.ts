@@ -8,7 +8,6 @@ import gameRoutes from "./routes/gameRoutes";
 import testRoutes from "./routes/testRoutes";
 import loginRoutes from "./routes/loginRoutes";
 import userRoutes from "./routes/userRoutes";
-import wordRoutes from "./routes/wordRoutes";
 import cors from "cors";
 import { Server } from "socket.io";
 import { setupGameSocket } from "./sockets/gameSocket";
@@ -50,8 +49,6 @@ app.use("/api/login", loginRoutes);
 app.get("/", (_, res) => {
   res.status(200).send("ok");
 });
-
-app.use("/api/word", wordRoutes); // only sending from backend
 
 app.use(verifyToken); // apply auth middleware to all routes below this line
 
