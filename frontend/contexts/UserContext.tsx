@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { getUser } from "@/utils/api";
+import { User } from "@/utils/types";
 
 interface UserContextType {
-  user: unknown; // Replace 'any' with a more specific type if available
+  user: User | null;
   loading: boolean;
   fetchUser: () => Promise<void>;
 }
@@ -16,7 +17,7 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {

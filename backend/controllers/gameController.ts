@@ -1,10 +1,7 @@
-import { customAlphabet } from "nanoid";
 import asyncHandler from "express-async-handler";
-
-const generateId = customAlphabet("1234567890abcdef", 6);
+import { createGame } from "../services/gameService";
 
 export const generateGame = asyncHandler(async (req: any, res: any) => {
-  const gameId = generateId();
+  const gameId = await createGame();
   res.json({ id: gameId });
 });
-

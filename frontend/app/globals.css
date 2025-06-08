@@ -4,6 +4,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --navbar-height: 64px;
 }
 
 @theme inline {
@@ -24,4 +25,8 @@ body {
 
 .nes-btn::after {
   @apply pointer-events-none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important ; transition: none !important ; }
 }

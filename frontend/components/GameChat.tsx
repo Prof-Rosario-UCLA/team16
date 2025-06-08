@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 type Message = {
   user?: string;
   message: string;
+  isPublic: boolean;
 };
 
 export default function GameChat() {
@@ -15,17 +16,33 @@ export default function GameChat() {
   useEffect(() => {
     if (!socket) return;
     socket.on("receive_message", (message: Message) => {
+      // insert new message into messages
       setMessages((prevMessages) => [message, ...prevMessages]);
     });
     socket.on("user_joined", (message: Message) => {
       setMessages((prevMessages) => [
-        { message: `${message.user} joined the game` },
+        {
+          message: `${message.user} joined the game`,
+          isPublic: true,
+        },
         ...prevMessages,
       ]);
     });
     socket.on("user_left", (message: Message) => {
       setMessages((prevMessages) => [
-        { message: `${message.user} left the game` },
+        {
+          message: `${message.user} left the game`,
+          isPublic: true,
+        },
+        ...prevMessages,
+      ]);
+    });
+    socket.on("correct_guess", (message: Message) => {
+      setMessages((prevMessages) => [
+        {
+          message: `${message.user} guessed the word correctly!`,
+          isPublic: true,
+        },
         ...prevMessages,
       ]);
     });
@@ -42,14 +59,30 @@ export default function GameChat() {
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>
         ) : (
-          messages.map((message, index) => (
-            <div key={index}>
-              {message.user && (
-                <span className="nes-text is-success">{`${message.user} `}</span>
-              )}
-              <span>{message.message}</span>
-            </div>
-          ))
+          messages.map(
+            (
+              message,
+              index // check render messages differently based on whehter or not they're public
+            ) => (
+              <div key={index}>
+                {message.isPublic ? (
+                  <span>
+                    {message.user && (
+                      <span className="nes-text is-success">{`${message.user} `}</span>
+                    )}
+                    <span className="break-words">{message.message}</span>
+                  </span>
+                ) : (
+                  <span className="bg-green-300 text-white px-2 py-1 rounded-md inline-block">
+                    {message.user && (
+                      <span className="nes-text">{`${message.user} `}</span>
+                    )}
+                    <span>{message.message}</span>
+                  </span>
+                )}
+              </div>
+            )
+          )
         )}
       </div>
       <div>
