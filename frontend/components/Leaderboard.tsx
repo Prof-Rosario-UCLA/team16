@@ -80,7 +80,7 @@ const Leaderboard = () => {
           <LeaderboardEntryCard
             username={username}
             stats={userStats}
-            label={`#${userStats.placement[sortKey] + 1}`}
+            label={`#${userStats.placement[sortKey]}`}
             highlight
           />
         )}
@@ -104,7 +104,7 @@ const LeaderboardEntryCard = ({
   highlight?: boolean;
 }) => {
   return (
-    <div className="flex justify-between items-start border-b border-gray-300 last:border-b-0 flex-col md:flex-row p-4">
+    <div className="flex justify-between items-start border-b border-gray-300 last:border-b-0 flex-col md:flex-row p-2">
       <div className="flex items-center gap-8">
         <span className="nes-text text-yellow-600 w-8 ">{label}</span>
         <span
