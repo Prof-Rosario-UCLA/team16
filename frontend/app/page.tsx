@@ -16,10 +16,19 @@ export default function Home() {
   }, [user, loading, router]);
 
   const handleCreateGame = async () => {
+    if (!navigator.onLine) {
+      router.push("/offlineGame");
+      return;
+    }
     const res = await createGame();
     const gameId = res.data.id;
+    if (!gameId) {
+      router.push("/offlineGame");
+      return;
+    }
     router.push(`/game/${gameId}`);
   };
+
 
   if (loading)
     return (

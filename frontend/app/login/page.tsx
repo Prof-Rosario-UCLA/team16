@@ -37,6 +37,7 @@ const LoginPageComponent = () => {
       }
 
       setSuccess(true);
+      localStorage.setItem("cachedUser", JSON.stringify(res.data));
 
       const redirectTo = searchParams.get("redirect") || "/";
       await fetchUser?.();

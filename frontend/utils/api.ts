@@ -2,7 +2,7 @@ import { LeaderboardResponse, User, UserStatsResponse } from "@/utils/types";
 import axios from "axios";
 
 export const baseURL =
-  process.env.NODE_ENV === "production" ? "" : "http://localhost:3001";
+  process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_PWA_DEBUGGING === "false" ? "" : "http://localhost:3001";
 const apiURL = `${baseURL}/api`;
 
 export const createGame = async () => {

@@ -23,12 +23,17 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const data = await getUser();
-      setUser(data);
-      console.log("User fetched:", data);
+      const res = await getUser();
+      setUser(res);
+      localStorage.setItem("cachedUser", JSON.stringify(res));
     } catch (err) {
       console.warn("Not logged in:", err);
-      setUser(null);
+      const cached = localStorage.getItem("cachedUser");
+      if (cached) {
+        setUser(JSON.parse(cached));
+      } else {
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
