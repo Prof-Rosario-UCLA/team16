@@ -2,14 +2,15 @@
 
 import { useUser } from "@/contexts/UserContext";
 import { getLeaderboard, getUserStats } from "@/utils/api";
-import { LeaderboardEntry, UserStatsResponse } from "@/utils/types";
+import {
+  LeaderboardEntry,
+  LeaderboardResponse,
+  UserStatsResponse,
+} from "@/utils/types";
 import { useEffect, useState } from "react";
 
 const Leaderboard = () => {
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
-    []
-  );
-  const [expires, setExpires] = useState<number>(0);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse>();
   const [sortKey, setSortKey] = useState<"wins" | "points" | "games">("points");
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
 
@@ -18,9 +19,8 @@ const Leaderboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getLeaderboard(sortKey);
-      setLeaderboardData(data.value);
-      setExpires(data.expires);
+      const data = await getLeaderboard();
+      setLeaderboardData(data);
     };
     fetchData();
   }, [sortKey]);
@@ -62,17 +62,11 @@ const Leaderboard = () => {
       <div className="!px-6 nes-container with-title bg-white">
         <p className="title">LEADERBOARD</p>
 
-        <div className="flex flex-col">
-          {leaderboardData.map((data, index) => (
-            <LeaderboardEntryCard
-              key={index}
-              username={data.username}
-              stats={data.stats}
-              label={`#${index + 1}`}
-              highlight={data.username === username}
-            />
-          ))}
-        </div>
+        <LeaderboardList
+          leaderboardData={leaderboardData}
+          sortKey={sortKey}
+          username={username}
+        />
       </div>
       <div className="!px-6 nes-container with-title bg-white">
         <p className="title">YOU</p>
@@ -85,9 +79,51 @@ const Leaderboard = () => {
           />
         )}
       </div>
-      <div className="text-center text-gray-500 text-sm mt-4">
-        <span>Next refresh at: {new Date(expires).toLocaleTimeString()}</span>
-      </div>
+      {leaderboardData && (
+        <div className="text-center text-gray-500 text-sm mt-4">
+          <span>
+            Next refresh at:
+            {new Date(leaderboardData.expires).toLocaleTimeString()}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const LeaderboardList = ({
+  leaderboardData,
+  sortKey,
+  username,
+}: {
+  leaderboardData: LeaderboardResponse | undefined;
+  sortKey: "wins" | "points" | "games";
+  username: string | undefined;
+}) => {
+  let rank = 1;
+  let prevStat = 0; // initial val doesn't matter
+  let displayRank = 1;
+  return (
+    <div className="flex flex-col">
+      {leaderboardData?.value?.[sortKey]?.map((data) => {
+        const currentStat = data.stats[sortKey];
+        if (currentStat !== prevStat) {
+          // logic for showing ties
+          displayRank = rank;
+        }
+        prevStat = currentStat;
+        rank++;
+
+        return (
+          <LeaderboardEntryCard
+            key={data.username}
+            username={data.username}
+            stats={data.stats}
+            label={`#${displayRank}`}
+            highlight={data.username === username}
+          />
+        );
+      })}
     </div>
   );
 };

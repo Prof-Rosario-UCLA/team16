@@ -8,7 +8,11 @@ export type LeaderboardEntry = {
 };
 
 export type LeaderboardResponse = {
-  value: LeaderboardEntry[];
+  value: {
+    wins: LeaderboardEntry[];
+    games: LeaderboardEntry[];
+    points: LeaderboardEntry[];
+  };
   expires: number;
 };
 

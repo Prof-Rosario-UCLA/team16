@@ -42,13 +42,9 @@ export const getUser = async (): Promise<User> => {
   return res.data;
 };
 
-export const getLeaderboard = async (
-  sortKey: string = "wins"
-): Promise<LeaderboardResponse> => {
-  const params = { sort: sortKey };
+export const getLeaderboard = async (): Promise<LeaderboardResponse> => {
   const res = await axios.get(`${apiURL}/leaderboard`, {
     withCredentials: true,
-    params,
   });
   return res.data;
 };
