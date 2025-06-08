@@ -72,12 +72,23 @@ async function cacheFirstStrategy(request) {
     return networkResponse;
   } catch (error) {
     console.error("Cache first strategy failed:", error);
-    // Fallback: serve offline page if available
     return caches.match("/offline.html");
   }
 }
 
 async function fetchComponents(request) {
+  if (request.method !== 'GET') {
+    try {
+      return await fetch(request); 
+    } catch (error) {
+      console.error(`Network request failed for ${request.url}:`, error);
+      return new Response(
+        JSON.stringify({ error: "Network error. Try again later." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  }
+
   const cache = await caches.open(CACHE_NAME);
 
   try {
