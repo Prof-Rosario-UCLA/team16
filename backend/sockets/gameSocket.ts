@@ -5,6 +5,7 @@ import {
   getGameStatus,
   setGameStatus,
 } from "../services/gameService";
+import { getRandomWord } from "../services/wordService";
 
 const generateId = customAlphabet("1234567890abcdef", 6);
 const ROUND_DURATION = 30 * 1000; // 30 seconds
@@ -50,12 +51,11 @@ export type GameState = {
   players: Player[]; // player includes points
   round: Round; // round info
   status: string; // notStarted, active, ended
+  usedWords: string[]; // used words for this game (avoid repeats if we can)
   usersToSocket: Map<string, string>; // every game room should have at least one user in it
 };
 
 const games = new Map<string, GameState>();
-
-const dummyWords = ["giraffe", "elephant", "dog", "cat", "flower"];
 
 export function setupGameSocket(io: Server, socket: Socket) {
   // joining a game
@@ -103,6 +103,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           activeGuessers: null,
         },
         status: "notStarted",
+        usedWords: [],
         usersToSocket: new Map<string, string>(),
       });
     }
@@ -156,7 +157,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       await setGameStatus(gameId, "in_progress");
 
       const drawerIndex = 0;
-      const word = dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: pull from database
+      const word = await getRandomWord(game.usedWords);
+      game.usedWords.push(word);
 
       // clear canvas
       games.get(socket.data.gameId)?.lines.clear();
@@ -213,7 +215,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     }
   });
 
-  socket.on("end_turn", () => {
+  socket.on("end_turn", async () => {
     const gameId = socket.data.gameId;
     if (!gameId) return;
 
@@ -230,9 +232,6 @@ export function setupGameSocket(io: Server, socket: Socket) {
         nextRoundNum += 1;
       }
 
-      const nextWord =
-        dummyWords[Math.floor(Math.random() * dummyWords.length)]; // TODO: fetch from database
-
       if (nextRoundNum > NUM_ROUNDS) {
         onGameEnd(game);
         return;
@@ -247,6 +246,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
         }
       });
 
+      const nextWord = await getRandomWord(game.usedWords);
+      game.usedWords.push(nextWord);
       // update game.round
       game.round = {
         roundNum: nextRoundNum,
@@ -260,6 +261,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
       games.get(socket.data.gameId)?.lines.clear();
       io.to(gameId).emit("clear_lines");
 
+      // start next turn
       io.to(gameId).emit("reveal_info", {
         roundNum: nextRoundNum,
         currDrawer: game.players[nextDrawerIndex].name,

@@ -130,8 +130,6 @@ export default function Game({ gameId }: { gameId: string }) {
         if (isDrawer) {
           socket.emit("end_turn");
         }
-        setCurrWord("");
-        setWordLength(0);
       }
     }, 1000);
 
