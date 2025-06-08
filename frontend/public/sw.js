@@ -72,12 +72,15 @@ async function cacheFirstStrategy(request) {
     return networkResponse;
   } catch (error) {
     console.error("Cache first strategy failed:", error);
-    // Fallback: serve offline page if available
     return caches.match("/offline.html");
   }
 }
 
 async function fetchComponents(request) {
+  if (request.method !== 'GET') {
+    return fetch(request); 
+  }
+
   const cache = await caches.open(CACHE_NAME);
 
   try {
