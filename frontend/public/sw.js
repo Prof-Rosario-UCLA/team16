@@ -4,6 +4,7 @@ const APP_SHELL = [
   "/",
   "/login",
   "/register",
+  "/leaderboard",
   "/offlineGame",
   "/offline.html",
   "/brush.png",
