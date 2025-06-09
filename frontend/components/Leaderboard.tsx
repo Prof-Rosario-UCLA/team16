@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 
 const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse>();
-  const [sortKey, setSortKey] = useState<"wins" | "points" | "games">("points");
+  const [sortKey, setSortKey] = useState<"wins" | "points" | "games">("wins");
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
 
   const userContext = useUser();
@@ -41,16 +41,16 @@ const Leaderboard = () => {
       </h1>
       <div className="flex justify-center gap-4 mb-4">
         <button
-          className={`nes-btn ${sortKey === "points" ? "is-warning" : ""}`}
-          onClick={() => setSortKey("points")}
-        >
-          Points
-        </button>
-        <button
           className={`nes-btn ${sortKey === "wins" ? "is-warning" : ""}`}
           onClick={() => setSortKey("wins")}
         >
           Wins
+        </button>
+        <button
+          className={`nes-btn ${sortKey === "points" ? "is-warning" : ""}`}
+          onClick={() => setSortKey("points")}
+        >
+          Points
         </button>
         <button
           className={`nes-btn ${sortKey === "games" ? "is-warning" : ""}`}
