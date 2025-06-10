@@ -92,7 +92,14 @@ const LoginPageComponent = () => {
 
       <p>
         New user?{" "}
-        <Link href="/register" className="text-blue-600 underline">
+        <Link     
+          href={{
+            pathname: "/register",
+            query: searchParams.has("redirect")
+              ? { redirect: searchParams.get("redirect") }
+              : undefined,
+          }} className="text-blue-600 underline"
+        >
           Register here
         </Link>
       </p>
