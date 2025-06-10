@@ -332,6 +332,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
                 // share that user guessed correctly
                 io.to(gameId).emit("correct_guess", {
                   user: user,
+                  pointChange: score,
                   players: game.players,
                   activeGuessers: Object.fromEntries(game.round.activeGuessers || []), // so client knows who has guessed it correctly
                 });

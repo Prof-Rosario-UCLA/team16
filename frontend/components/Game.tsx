@@ -39,6 +39,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
+  const [pointDifferences, setPointDifferences] = useState<Record<string, number>>({});
 
   const startGame = () => {
     if (!socket) return;
@@ -66,11 +67,19 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
-    socket.on("correct_guess", ({ players, activeGuessers }) => {
+    socket.on("correct_guess", ({ user: guesser, pointChange, players, activeGuessers }) => {
       setPlayers(players);
+      // track difference in points
+      setPointDifferences((prevDiffs) => ({
+        ...prevDiffs,
+        [guesser]: pointChange,
+      }));
+
+      // end the turn once everyone (besides drawer) has guessed correctly
       const allGuessed = Object.values(activeGuessers).every((val) => val === false);
-      if (allGuessed) {
-        socket.emit("end_turn"); // end the turn once everyone (besides drawer) has guessed correctly
+      const isGuesser = user?.username === guesser;
+      if (allGuessed && isGuesser) {
+        socket.emit("end_turn"); // only send end_turn once (last guesser sends it)
       }
     });
 
@@ -85,6 +94,12 @@ export default function Game({ gameId }: { gameId: string }) {
       setGameStarted(true);
       setTurnEnding(false);
       setCurrWord(""); // clear out current word at the start of this round
+
+      const initialDiffs: Record<string, number> = {};
+      players.forEach((player: Player) => {
+        initialDiffs[player.name] = 0;
+      });
+      setPointDifferences(initialDiffs);
 
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
@@ -181,12 +196,21 @@ export default function Game({ gameId }: { gameId: string }) {
             <ul className="space-y-2">
               {players
                 .sort((a, b) => b.points - a.points)
-                .map((player, idx) => (
-                  <li key={idx} className="flex justify-between px-4">
-                    <span className="nes-text is-primary">{player.name}</span>
-                    <span className="nes-text is-error">{player.points} pts</span>
-                  </li>
-                ))}
+                .map((player, idx) => {
+                  const diff = pointDifferences[player.name] ?? 0;
+                  return (
+                    <li key={idx} className="flex justify-between px-4 items-center">
+                      <span>
+                        <span className="mr-2">{idx + 1}.</span>
+                        <span className="nes-text is-primary">{player.name}</span>
+                        <span className="nes-text is-success"> +{diff}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="nes-text is-error">{player.points} pts</span>
+                      </span>
+                    </li>
+                  );
+                })}
             </ul>
           </div>
         </div>
@@ -239,7 +263,10 @@ export default function Game({ gameId }: { gameId: string }) {
                 .sort((a, b) => b.points - a.points)
                 .map((player, idx) => (
                   <li key={idx} className="flex justify-between px-4">
-                    <span className="nes-text is-primary">{player.name}</span>
+                    <span>
+                      <span className="mr-2">{idx + 1}.</span>
+                      <span className="nes-text is-primary">{player.name}</span>
+                    </span>
                     <span className="nes-text is-error">
                       {player.points} pts
                     </span>
