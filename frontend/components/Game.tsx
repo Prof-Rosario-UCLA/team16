@@ -136,7 +136,10 @@ export default function Game({ gameId }: { gameId: string }) {
     return () => {
       socket.off("user_joined");
       socket.off("user_left");
+      socket.off("correct_guess");
+      socket.off("error_message");
       socket.off("reveal_drawer");
+      socket.off("reveal_updated_points");
       socket.off("reveal_word_private");
       socket.off("start_turn");
       socket.off("game_ended");
