@@ -91,10 +91,13 @@ export const getUserStats = async (
 
 export const ping = async (): Promise<boolean> => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 seconds timeout
     const res = await axios.get(`/?t=${Date.now()}`, {
       withCredentials: true,
       headers: { "Cache-Control": "no-store, no-cache", "Expires": "0" },
     });
+    clearTimeout(timeoutId);
     return res.status === 200;
   } catch (error) {
     console.log("Ping failed", error);

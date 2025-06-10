@@ -23,7 +23,7 @@ export default function Home() {
     };
     
     checkOnlineStatus();
-    const interval = setInterval(checkOnlineStatus, 5000); // Check every 5 seconds
+    const interval = setInterval(checkOnlineStatus, 3000); // check connection every 3 seconds
 
     const handleOnline = () => {
       console.log('Network came back online');
