@@ -10,11 +10,11 @@ export default function Navbar() {
   async function handleLogout() {
     try {
       const res = await logout();
-      if (res.status === 200) {
+      if (res && res.status === 200) {
         localStorage.removeItem("cachedUser");
         router.push("/login");
       } else {
-        console.error("Logout failed", res.statusText);
+        console.error("Logout failed");
       }
     } catch (err) {
       console.error("Logout error", err);

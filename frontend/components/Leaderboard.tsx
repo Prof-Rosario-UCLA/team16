@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from "react";
 
 const Leaderboard = () => {
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse>();
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse | null>();
   const [sortKey, setSortKey] = useState<"wins" | "points" | "games">("wins");
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
 
@@ -96,7 +96,7 @@ const LeaderboardList = ({
   sortKey,
   username,
 }: {
-  leaderboardData: LeaderboardResponse | undefined;
+  leaderboardData: LeaderboardResponse | undefined | null;
   sortKey: "wins" | "points" | "games";
   username: string | undefined;
 }) => {

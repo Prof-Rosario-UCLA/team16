@@ -1,4 +1,4 @@
-const CACHE_NAME = 'my-cache-v8';
+const CACHE_NAME = 'my-cache-v2';
 
 const APP_SHELL = [
   "/",
@@ -82,10 +82,6 @@ async function fetchComponents(request) {
       return await fetch(request); 
     } catch (error) {
       console.error(`Network request failed for ${request.url}:`, error);
-      return new Response(
-        JSON.stringify({ error: "Network error. Try again later." }),
-        { status: 503, headers: { "Content-Type": "application/json" } }
-      );
     }
   }
 
@@ -97,7 +93,7 @@ async function fetchComponents(request) {
     await cache.put(request, responseClone);
     return response;
   } catch (error) {
-    console.log(`Dyanmic caching failed with ${error}, falling back to cache for: ${request.url}`);
+    console.log(`Dynamic caching failed with ${error}, falling back to cache for: ${request.url}`);
     return caches.match(request);
   }
 }
@@ -110,13 +106,16 @@ self.addEventListener("fetch", (event) => {
   } else {
     const url = new URL(request.url);
     if (url.pathname.endsWith('/api/game')) {
-      // Special case for /game/[gameId] pages
       event.respondWith(
-        fetch(request).catch(() => caches.match("/offlineGame"))
+        fetch(request).catch(() => (console.error('Network request failed, returning offline page.')))
       );
     }
     else {
-      event.respondWith(fetchComponents(request));
+      try {
+        event.respondWith(fetchComponents(request));
+      } catch (error) {
+        console.error('Service Worker fetchComponents error:', error);
+      }
     }
   }
 });
