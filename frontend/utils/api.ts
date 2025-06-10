@@ -88,3 +88,16 @@ export const getUserStats = async (
     return null;
   }
 };
+
+export const ping = async (): Promise<boolean> => {
+  try {
+    const res = await axios.get(`/?t=${Date.now()}`, {
+      withCredentials: true,
+      headers: { "Cache-Control": "no-store, no-cache", "Expires": "0" },
+    });
+    return res.status === 200;
+  } catch (error) {
+    console.log("Ping failed", error);
+    return false;
+  }
+}

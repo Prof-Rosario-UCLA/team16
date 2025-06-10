@@ -19,8 +19,6 @@ const APP_SHELL = [
   "/icons/doodly-icon.png"
 ];
 
-
-
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
@@ -44,7 +42,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating.');
   event.waitUntil(
@@ -55,7 +52,6 @@ self.addEventListener('activate', (event) => {
     )
   );
 });
-
 
 async function cacheFirstStrategy(request) {
   try {
@@ -82,6 +78,7 @@ async function fetchComponents(request) {
       return await fetch(request); 
     } catch (error) {
       console.error(`Network request failed for ${request.url}:`, error);
+      return new Response("Network error", { status: 500 });
     }
   }
 
@@ -92,9 +89,11 @@ async function fetchComponents(request) {
     const responseClone = response.clone();
     await cache.put(request, responseClone);
     return response;
-  } catch (error) {
-    console.log(`Dynamic caching failed with ${error}, falling back to cache for: ${request.url}`);
-    return caches.match(request);
+  } catch (err) {
+    console.error(`Fetch failed for ${request.url}:`, err);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response("Offline and not cached", { status: 504 });
   }
 }
 
@@ -105,17 +104,20 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheFirstStrategy(request));
   } else {
     const url = new URL(request.url);
-    if (url.pathname.endsWith('/api/game')) {
+    if (url.pathname.endsWith("/api/game")) {
       event.respondWith(
-        fetch(request).catch(() => (console.error('Network request failed, returning offline page.')))
+        fetch(request).catch(() => caches.match("/offlineGame"))
       );
-    }
-    else {
-      try {
-        event.respondWith(fetchComponents(request));
-      } catch (error) {
-        console.error('Service Worker fetchComponents error:', error);
-      }
+    } else {
+      event.respondWith(
+        fetchComponents(request).catch((err) => {
+          console.error("fetchComponents failed:", err);
+          return new Response("Fetch failed", {
+            status: 500,
+            statusText: "Internal Service Worker Error",
+          });
+        })
+      );
     }
   }
 });
