@@ -26,7 +26,8 @@ export default function Game({ gameId }: { gameId: string }) {
   // const [, setJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
+  const [turnStarting, setTurnStarting] = useState(false); // turn starting screen (revealing the drawer)
+  const [turnEnding, setTurnEnding] = useState(false); // turn end screen (revealing the updated points)
   const [turnActive, setTurnActive] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
   const [finalPlayers, setFinalPlayers] = useState<Player[]>([]);
@@ -76,9 +77,12 @@ export default function Game({ gameId }: { gameId: string }) {
       }
     });
 
-    socket.on("reveal_info", ({ roundNum, currDrawer, wordLength }) => {
+    socket.on("reveal_drawer", ({ roundNum, currDrawer, wordLength }) => {
       setGameStarted(true);
-      setShowInfo(true);
+      setTurnEnding(false);
+      setCurrWord(""); // clear out current word at the start of this round
+
+      setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
       setCurrDrawer(currDrawer);
       setWordLength(wordLength);
@@ -86,12 +90,19 @@ export default function Game({ gameId }: { gameId: string }) {
       playSound("newround");
     });
 
-    socket.on("reveal_word", ({ word }) => {
+    // show updated points and the correct word after drawing time is up
+    socket.on("reveal_updated_points", ({ players, word }) => {
+      setTurnEnding(true);
+      setPlayers(players);
+      setCurrWord(word);
+    });
+
+    socket.on("reveal_word_private", ({ word }) => {
       setCurrWord(word);
     });
 
     socket.on("start_turn", ({ endTime }) => {
-      setShowInfo(false);
+      setTurnStarting(false);
       setEndTime(endTime);
       setTimeLeft(Math.floor((endTime - Date.now()) / 1000));
       setTurnActive(true);
@@ -106,8 +117,8 @@ export default function Game({ gameId }: { gameId: string }) {
     return () => {
       socket.off("user_joined");
       socket.off("user_left");
-      socket.off("reveal_info");
-      socket.off("reveal_word");
+      socket.off("reveal_drawer");
+      socket.off("reveal_word_private");
       socket.off("start_turn");
       socket.off("game_ended");
     };
@@ -139,7 +150,7 @@ export default function Game({ gameId }: { gameId: string }) {
   return (
     <div className="relative flex flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-200 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
-      {showInfo && (
+      {turnStarting && (
         <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
           <div className="nes-container is-rounded bg-white p-8 w-100 rounded-xl text-center shadow-lg">
             {user?.username !== currDrawer && (
@@ -153,6 +164,26 @@ export default function Game({ gameId }: { gameId: string }) {
                 <div className="text-xl mt-2 italic">Your word: {currWord}</div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {turnEnding && (
+        <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
+          <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
+            <div className="mb-5">
+              <h1 className="text-lg nes-text">The word was... </h1>
+              <p className="text-lg nes-text is-success uppercase">bed</p>
+            </div>
+            <ul className="space-y-2">
+              {players
+                .sort((a, b) => b.points - a.points)
+                .map((player, idx) => (
+                  <li key={idx} className="flex justify-between px-4">
+                    <span className="nes-text is-primary">{player.name}</span>
+                    <span className="nes-text is-error">{player.points} pts</span>
+                  </li>
+                ))}
+            </ul>
           </div>
         </div>
       )}

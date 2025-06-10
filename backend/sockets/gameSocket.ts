@@ -161,7 +161,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
       game.usedWords.push(word);
 
       // clear canvas
-      games.get(socket.data.gameId)?.lines.clear();
+      game.lines.clear();
       io.to(gameId).emit("clear_lines");
 
       // initialize active guessers map
@@ -187,7 +187,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
       console.log(`Game ${gameId} started`);
 
       // reveal round number and current drawer to everyone
-      io.to(gameId).emit("reveal_info", {
+      io.to(gameId).emit("reveal_drawer", {
         roundNum: game.round.roundNum,
         currDrawer: game.players[drawerIndex].name,
         wordLength: game.round.word?.length ?? 0,
@@ -200,7 +200,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           s.data.gameId === gameId
       );
       if (drawerSocket) {
-        drawerSocket.emit("reveal_word", { word });
+        drawerSocket.emit("reveal_word_private", { word });
       }
 
       // wait 5 seconds, then start timer
@@ -221,6 +221,10 @@ export function setupGameSocket(io: Server, socket: Socket) {
 
     if (gameId) {
       const game = games.get(gameId)!;
+
+      // clear canvas
+      game.lines.clear();
+      io.to(gameId).emit("clear_lines");
 
       // advance drawer
       const currentIndex = game.round.drawerIndex!;
@@ -257,33 +261,38 @@ export function setupGameSocket(io: Server, socket: Socket) {
         activeGuessers: newActiveGuessers,
       };
 
-      // clear canvas
-      games.get(socket.data.gameId)?.lines.clear();
-      io.to(gameId).emit("clear_lines");
-
-      // start next turn
-      io.to(gameId).emit("reveal_info", {
-        roundNum: nextRoundNum,
-        currDrawer: game.players[nextDrawerIndex].name,
-        wordLength: game.round.word?.length ?? 0,
+      // show what the word was and the updated points
+      io.to(gameId).emit("reveal_updated_points", {
+        players: game.players, word: game.round.word
       });
 
-      const drawerSocket = [...io.sockets.sockets.values()].find(
-        (s) =>
-          s.data.user === game.players[nextDrawerIndex].name &&
-          s.data.gameId === gameId
-      );
-
-      if (drawerSocket) {
-        drawerSocket.emit("reveal_word", { word: nextWord });
-      }
-
-      // wait 5 seconds, then start timer
+      // add delay before starting the next turn
       setTimeout(() => {
-        const endTime = Date.now() + ROUND_DURATION;
-        game.round.endTime = endTime;
+        // start next turn
+        io.to(gameId).emit("reveal_drawer", {
+          roundNum: nextRoundNum,
+          currDrawer: game.players[nextDrawerIndex].name,
+          wordLength: game.round.word?.length ?? 0,
+        });
 
-        io.to(gameId).emit("start_turn", { endTime });
+        // only reveal word to the current drawer
+        const drawerSocket = [...io.sockets.sockets.values()].find(
+          (s) =>
+            s.data.user === game.players[nextDrawerIndex].name &&
+            s.data.gameId === gameId
+        );
+
+        if (drawerSocket) {
+          drawerSocket.emit("reveal_word_private", { word: nextWord });
+        }
+
+        // wait 5 seconds, then start timer
+        setTimeout(() => {
+          const endTime = Date.now() + ROUND_DURATION;
+          game.round.endTime = endTime;
+
+          io.to(gameId).emit("start_turn", { endTime });
+        }, INTERVAL);
       }, INTERVAL);
     }
   });
