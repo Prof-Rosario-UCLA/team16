@@ -66,8 +66,12 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
-    socket.on("correct_guess", ({ players }) => {
+    socket.on("correct_guess", ({ players, activeGuessers }) => {
       setPlayers(players);
+      const allGuessed = Object.values(activeGuessers).every((val) => val === false);
+      if (allGuessed) {
+        socket.emit("end_turn"); // end the turn once everyone (besides drawer) has guessed correctly
+      }
     });
 
     socket.on("error_message", ({ message, redirectUrl }) => {
@@ -139,7 +143,7 @@ export default function Game({ gameId }: { gameId: string }) {
         const isDrawer = user?.username === currDrawer;
 
         if (isDrawer) {
-          socket.emit("end_turn");
+          socket.emit("end_turn"); // only want to emit end_turn once (only the drawer emits)
         }
       }
     }, 1000);
@@ -172,7 +176,7 @@ export default function Game({ gameId }: { gameId: string }) {
           <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
             <div className="mb-5">
               <h1 className="text-lg nes-text">The word was... </h1>
-              <p className="text-lg nes-text is-success uppercase">bed</p>
+              <p className="text-lg nes-text is-success uppercase">{currWord}</p>
             </div>
             <ul className="space-y-2">
               {players

@@ -226,48 +226,47 @@ export function setupGameSocket(io: Server, socket: Socket) {
       game.lines.clear();
       io.to(gameId).emit("clear_lines");
 
-      // advance drawer
-      const currentIndex = game.round.drawerIndex!;
-      const nextDrawerIndex = (currentIndex + 1) % game.players.length;
-
-      // advance round if needed
-      let nextRoundNum = game.round.roundNum ?? 1;
-      if (currentIndex >= game.players.length - 1) {
-        nextRoundNum += 1;
-      }
-
-      if (nextRoundNum > NUM_ROUNDS) {
-        onGameEnd(game);
-        return;
-      }
-
-      let newActiveGuessers = new Map<string, boolean>();
-      game.players.forEach((player, index) => {
-        if (index != nextDrawerIndex) {
-          newActiveGuessers.set(player.name, true);
-        } else {
-          newActiveGuessers.set(player.name, false);
-        }
-      });
-
-      const nextWord = await getRandomWord(game.usedWords);
-      game.usedWords.push(nextWord);
-      // update game.round
-      game.round = {
-        roundNum: nextRoundNum,
-        drawerIndex: nextDrawerIndex,
-        endTime: null,
-        word: nextWord,
-        activeGuessers: newActiveGuessers,
-      };
-
       // show what the word was and the updated points
       io.to(gameId).emit("reveal_updated_points", {
-        players: game.players, word: game.round.word
-      });
+          players: game.players, word: game.round.word
+        });
 
-      // add delay before starting the next turn
-      setTimeout(() => {
+      setTimeout(async () => {
+        // advance drawer
+        const currentIndex = game.round.drawerIndex!;
+        const nextDrawerIndex = (currentIndex + 1) % game.players.length;
+
+        // advance round if needed
+        let nextRoundNum = game.round.roundNum ?? 1;
+        if (currentIndex >= game.players.length - 1) {
+          nextRoundNum += 1;
+        }
+
+        if (nextRoundNum > NUM_ROUNDS) {
+          onGameEnd(game);
+          return;
+        }
+
+        let newActiveGuessers = new Map<string, boolean>();
+        game.players.forEach((player, index) => {
+          if (index != nextDrawerIndex) {
+            newActiveGuessers.set(player.name, true);
+          } else {
+            newActiveGuessers.set(player.name, false);
+          }
+        });
+
+        const nextWord = await getRandomWord(game.usedWords);
+        game.usedWords.push(nextWord);
+        // update game.round
+        game.round = {
+          roundNum: nextRoundNum,
+          drawerIndex: nextDrawerIndex,
+          endTime: null,
+          word: nextWord,
+          activeGuessers: newActiveGuessers,
+        };
+      
         // start next turn
         io.to(gameId).emit("reveal_drawer", {
           roundNum: nextRoundNum,
@@ -334,6 +333,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
                 io.to(gameId).emit("correct_guess", {
                   user: user,
                   players: game.players,
+                  activeGuessers: Object.fromEntries(game.round.activeGuessers || []), // so client knows who has guessed it correctly
                 });
               }
             });
