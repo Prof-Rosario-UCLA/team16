@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/contexts/UserContext";
-import { createGame } from "@/utils/api";
+import { createGame, ping } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -17,33 +17,41 @@ export default function Home() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    
-    const handleOnline = () => {
-      console.log('Network came back online');
-      setIsOnline(true);
+    const checkOnlineStatus = async () => {
+      const pingCheck = await ping();
+      setIsOnline(pingCheck);
     };
     
+    checkOnlineStatus();
+    const interval = setInterval(checkOnlineStatus, 5000); // Check every 5 seconds
+
+    const handleOnline = () => {
+      console.log('Network came back online');
+      checkOnlineStatus();
+    };
+
     const handleOffline = () => {
       console.log('Network went offline');
       setIsOnline(false);
     };
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
     };
   }, []);
 
   const handleCreateGame = async () => {
-    if (!isOnline) {
+    const pingCheck = await ping();
+    if (!isOnline || !pingCheck) {
+      setIsOnline(false);
       console.log('Cannot create game while offline');
       return;
-    }
-    
+    }  
     const res = await createGame();
     if (!res) {
       console.error("Failed to create game");
