@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login, register } from "@/utils/api";
 import { useUser } from "@/contexts/UserContext";
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageComponent />
+    </Suspense>
+  );
+}
+
+const RegisterPageComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
