@@ -31,7 +31,7 @@ const LoginPageComponent = () => {
 
       const res = await login(username, password);
 
-      if (res.status !== 200) {
+      if (!res || res.status !== 200) {
         setError(true);
         return;
       }

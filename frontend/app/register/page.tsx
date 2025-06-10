@@ -30,9 +30,9 @@ const RegisterPageComponent = () => {
 
     try {
       const res = await register(username, password);
-      if (res.status === 200 || res.status === 201) {
+      if (res && (res.status === 200 || res.status === 201)) {
         const loginRes = await login(username, password);
-        if (loginRes.status === 200) {
+        if (loginRes && loginRes.status === 200) {
           setSuccess(true);
           localStorage.setItem("cachedUser", JSON.stringify(loginRes.data));
           const redirectTo = searchParams.get("redirect") || "/";
