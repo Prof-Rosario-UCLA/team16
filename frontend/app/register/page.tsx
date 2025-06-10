@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { register } from "@/utils/api";
+import { login, register } from "@/utils/api";
+import { useUser } from "@/contexts/UserContext";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { fetchUser } = useUser() ?? {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +23,14 @@ export default function RegisterPage() {
     try {
       const res = await register(username, password);
       if (res.status === 200 || res.status === 201) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/login");
-        }, 1000);
+        const loginRes = await login(username, password);
+        if (loginRes.status === 200) {
+          setSuccess(true);
+          localStorage.setItem("cachedUser", JSON.stringify(loginRes.data));
+          const redirectTo = searchParams.get("redirect") || "/";
+          await fetchUser?.();
+          setTimeout(() => router.replace(redirectTo), 1000); // Redirect after short delay
+        }
       } else {
         setError(true);
       }
@@ -44,7 +51,7 @@ export default function RegisterPage() {
       )}
       {success && (
         <div className="w-80 p-3 text-sm text-green-700 bg-green-100 border border-green-400 rounded">
-          Registered successfully! Redirecting to login...
+          Registered successfully! Logging you in...
         </div>
       )}
 
@@ -72,7 +79,14 @@ export default function RegisterPage() {
 
       <p>
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 underline">
+        <Link     
+          href={{
+            pathname: "/login",
+            query: searchParams.has("redirect")
+              ? { redirect: searchParams.get("redirect") }
+              : undefined,
+          }} className="text-blue-600 underline"
+        >
           Login here
         </Link>
       </p>

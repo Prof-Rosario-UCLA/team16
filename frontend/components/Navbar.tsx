@@ -22,7 +22,8 @@ export default function Navbar() {
   }
 
   return (
-    <div className="absolute inset-0 z-50 h-[var(--navbar-height)] px-10 pt-10 flex items-center">
+    <div className="absolute inset-0 z-50 h-[var(--navbar-height)] px-10 pt-10 flex justify-between items-center">
+      {/* Left side: Logo */}
       <Link
         href="/"
         className="font-bold hover:underline"
@@ -30,25 +31,20 @@ export default function Navbar() {
       >
         doodly
       </Link>
-      <div className="w-full flex justify-between items-center px-4 py-2">
-        <nav className="flex items-center space-x-4">
-          <Link href="/leaderboard" className="hover:underline">
-            Leaderboard
-          </Link>
-        </nav>
-        <nav className="flex items-center space-x-4">
-          <Link href="/profile" className="hover:underline">
-            Profile
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="hover:underline cursor-pointer nes-btn is-normal"
-            type="button"
-            aria-label="Logout"
-          >
-            Logout
-          </button>
-        </nav>
+
+      {/* Right side: Links */}
+      <div className="flex items-center space-x-4">
+        <Link href="/leaderboard" className="hover:underline">
+          Leaderboard
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="hover:underline cursor-pointer nes-btn is-normal"
+          type="button"
+          aria-label="Logout"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
