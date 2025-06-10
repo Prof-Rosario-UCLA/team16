@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const CACHE_NAME = 'my-cache-v2';
 
 const APP_SHELL = [
@@ -90,7 +91,6 @@ async function fetchComponents(request) {
     await cache.put(request, responseClone);
     return response;
   } catch (err) {
-    console.error(`Fetch failed for ${request.url}:`, err);
     const cached = await cache.match(request);
     if (cached) return cached;
     return new Response("Offline and not cached", { status: 504 });
