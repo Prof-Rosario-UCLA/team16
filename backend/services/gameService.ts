@@ -41,7 +41,7 @@ export const dbOnGameEnd = async (game: GameState) => {
       })),
       numRounds: game.round.roundNum,
       winner: sortedPlayers[0].name,
-      status: "ended",
+      status: "finished",
     }
   );
 
