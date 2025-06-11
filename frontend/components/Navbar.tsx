@@ -39,7 +39,7 @@ export default function Navbar() {
 
       {/* Desktop Links */}
       <div className="hidden sm:flex items-center space-x-4">
-        <Link href="/leaderboard" className="hover:underline !text-white">
+        <Link href="/leaderboard" className="hover:underline !text-white !text-sm">
           Leaderboard
         </Link>
         <button
@@ -59,7 +59,7 @@ export default function Navbar() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-4 mt-2 w-40 bg-white shadow-lg rounded-md !sm:hidden z-50">
+        <div className="absolute top-full right-4 mt-2 w-40 bg-white shadow-lg rounded-md sm:!hidden z-50">
           <Link
             href="/leaderboard"
             className="block text-xs sm:text-sm px-4 py-2 hover:bg-gray-100"
@@ -72,7 +72,7 @@ export default function Navbar() {
               setIsOpen(false);
               handleLogout();
             }}
-            className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-100"
+            className="block w-full text-left px-4 py-2 !text-xs sm:text-sm hover:bg-gray-100"
           >
             Logout
           </button>

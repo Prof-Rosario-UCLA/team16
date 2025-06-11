@@ -7,7 +7,7 @@ import { customAlphabet } from "nanoid";
 // import { DrawingLineWasm } from "@/components/DrawingLineWasm";
 import { DrawingLine } from "@/components/DrawingLine";
 import playSound from "@/utils/playSound"
-import { pointsToPath } from "@/components/DrawingLine";
+// import { pointsToPath } from "@/components/DrawingLine";
 // const USE_WASM = false;
 const Line = DrawingLine;
 
@@ -394,31 +394,31 @@ const DrawAreaControls = memo(
 );
 DrawAreaControls.displayName = "DrawAreaControls";
 
-const exportDrawing = (lines: Line[]) => {
-  const scale = 3;
+// const exportDrawing = (lines: Line[]) => {
+//   const scale = 3;
 
-  const canvas = document.createElement("canvas");
-  canvas.width = VIEWBOX_WIDTH * scale;
-  canvas.height = VIEWBOX_HEIGHT * scale;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.scale(scale, scale); // scale so we're still in the same coordinate system
+//   const canvas = document.createElement("canvas");
+//   canvas.width = VIEWBOX_WIDTH * scale;
+//   canvas.height = VIEWBOX_HEIGHT * scale;
+//   const ctx = canvas.getContext("2d");
+//   if (!ctx) return;
+//   ctx.fillStyle = "white";
+//   ctx.fillRect(0, 0, canvas.width, canvas.height);
+//   ctx.scale(scale, scale); // scale so we're still in the same coordinate system
 
-  ctx.lineCap = "round";
-  lines.forEach((line) => {
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = line.width;
-    ctx.beginPath();
-    const path = new Path2D();
-    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
-    ctx.stroke(path);
-  });
-  const img = new Image();
-  img.src = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.href = img.src;
-  link.download = "drawing.png";
-  link.click();
-};
+//   ctx.lineCap = "round";
+//   lines.forEach((line) => {
+//     ctx.strokeStyle = line.color;
+//     ctx.lineWidth = line.width;
+//     ctx.beginPath();
+//     const path = new Path2D();
+//     path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+//     ctx.stroke(path);
+//   });
+//   const img = new Image();
+//   img.src = canvas.toDataURL("image/png");
+//   const link = document.createElement("a");
+//   link.href = img.src;
+//   link.download = "drawing.png";
+//   link.click();
+// };

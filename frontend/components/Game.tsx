@@ -95,11 +95,8 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnEnding(false);
       setCurrWord(""); // clear out current word at the start of this round
 
-      const initialDiffs: Record<string, number> = {};
-      players.forEach((player: Player) => {
-        initialDiffs[player.name] = 0;
-      });
-      setPointDifferences(initialDiffs);
+      // reset point differences
+      setPointDifferences({});
 
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
@@ -144,7 +141,7 @@ export default function Game({ gameId }: { gameId: string }) {
       socket.off("start_turn");
       socket.off("game_ended");
     };
-  }, [socket, gameId, router]);
+  }, [socket, gameId, router, user?.username]);
 
   useEffect(() => {
     if (!socket) return;
