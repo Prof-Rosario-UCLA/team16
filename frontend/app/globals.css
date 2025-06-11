@@ -19,6 +19,14 @@ body {
   color: var(--foreground);
 }
 
+.section-flex {
+  display: flex;
+}
+
+.main-flex {
+  display: flex;
+}
+
 .nes-container {
   @apply p-4;
 }

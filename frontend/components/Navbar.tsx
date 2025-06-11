@@ -45,6 +45,7 @@ export default function Navbar() {
         <button
           onClick={handleLogout}
           className="nes-btn is-normal !text-sm !px-1 !py-1"
+          aria-label="Logout"
         >
           Logout
         </button>
