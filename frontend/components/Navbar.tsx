@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react"; // Optional: use Lucide icons
 
 
+
 export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -51,17 +52,17 @@ export default function Navbar() {
 
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="nes-btn !sm:hidden !p-2 !focus:outline-none"
+        className="nes-btn p-2 focus:outline-none sm:!hidden"
         aria-label="Toggle Menu"
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-4 mt-2 w-40 bg-white shadow-lg rounded-md sm:hidden z-50">
+        <div className="absolute top-full right-4 mt-2 w-40 bg-white shadow-lg rounded-md !sm:hidden z-50">
           <Link
             href="/leaderboard"
-            className="block !text-xs !sm:text-sm px-4 py-2 !hover:bg-gray-100"
+            className="block text-xs sm:text-sm px-4 py-2 hover:bg-gray-100"
             onClick={() => setIsOpen(false)}
           >
             Leaderboard
@@ -71,7 +72,7 @@ export default function Navbar() {
               setIsOpen(false);
               handleLogout();
             }}
-            className="block w-full text-left px-4 !py-2 text-xs !sm:text-sm hover:bg-gray-100"
+            className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-100"
           >
             Logout
           </button>
@@ -79,4 +80,5 @@ export default function Navbar() {
       )}
     </div>
   );
+
 }
