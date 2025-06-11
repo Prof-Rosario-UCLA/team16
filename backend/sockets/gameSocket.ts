@@ -227,7 +227,12 @@ export function setupGameSocket(io: Server, socket: Socket) {
       io.to(gameId).emit("clear_lines");
 
       // give drawer some points
-      const drawer_score = 25 + Math.round(Math.max((game.round.endTime! - Date.now()) / 200, 0));
+      let drawer_score = Math.round(Math.max((game.round.endTime! - Date.now()) / 200, 0));
+      game.round.activeGuessers?.forEach((guessing, username) => {
+        if (!guessing && username !== game.players[game.round.drawerIndex!].name) {
+          drawer_score += 25
+        }
+      })
 
       console.log(`drawerscore ${drawer_score}`);
       game.players.forEach((player, index) => {
