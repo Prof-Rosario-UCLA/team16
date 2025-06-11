@@ -98,6 +98,27 @@ export default function DrawArea({
       y: Math.round(svgPoint.y * 100) / 100,
     };
   };
+  const getTouchSvgCoords = (
+    e: TouchEvent | React.TouchEvent,
+    useChangedTouches = false
+  ) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+
+    const touches = useChangedTouches ? e.changedTouches : e.touches;
+    const touch = touches[0];
+    if (!touch) return { x: 0, y: 0 };
+
+    const pt = svg.createSVGPoint();
+    pt.x = touch.clientX;
+    pt.y = touch.clientY;
+
+    const svgPoint = pt.matrixTransform(svg.getScreenCTM()?.inverse());
+    return {
+      x: Math.round(svgPoint.x * 100) / 100,
+      y: Math.round(svgPoint.y * 100) / 100,
+    };
+  };
 
   useEffect(() => {
     setLocalLines((prevLines) => {
@@ -137,52 +158,50 @@ export default function DrawArea({
   useEffect(() => {
     let pending = false;
     const handleMouseMove = (mouseEvent: MouseEvent) => {
-      if (!isDrawing) {
+      if (!isDrawing || pending) {
         return;
       }
 
-      if (!pending) {
-        pending = true;
-        const point = getSvgCoords(mouseEvent);
+      pending = true;
+      const point = getSvgCoords(mouseEvent);
 
-        // throttles path updates to at most once per frame
-        // at least, that's the intention
-        requestAnimationFrame(() => {
-          setLocalLines((prevLines) => {
-            if (prevLines.length === 0) return prevLines;
+      // throttles path updates to at most once per frame
+      // at least, that's the intention
+      requestAnimationFrame(() => {
+        setLocalLines((prevLines) => {
+          if (prevLines.length === 0) return prevLines;
 
-            const lastLine = prevLines[prevLines.length - 1];
-            const last = lastLine.points[lastLine.points.length - 1];
-            const dx = point.x - last.x;
-            const dy = point.y - last.y;
-            const dist2 = dx * dx + dy * dy;
+          const lastLine = prevLines[prevLines.length - 1];
+          const last = lastLine.points[lastLine.points.length - 1];
+          const dx = point.x - last.x;
+          const dy = point.y - last.y;
+          const dist2 = dx * dx + dy * dy;
 
-            if (dist2 < 1) return prevLines;
+          if (dist2 < 1) return prevLines;
 
-            const k = 0.25;
-            const smoothed = {
-              x: last.x * (1 - k) + point.x * k,
-              y: last.y * (1 - k) + point.y * k,
-            };
+          const k = 0.25;
+          const smoothed = {
+            x: last.x * (1 - k) + point.x * k,
+            y: last.y * (1 - k) + point.y * k,
+          };
 
-            const updatedLine = {
-              ...lastLine,
-              points: [...lastLine.points, smoothed],
-            };
+          const updatedLine = {
+            ...lastLine,
+            points: [...lastLine.points, smoothed],
+          };
 
-            const newLines = [
-              ...prevLines.slice(0, prevLines.length - 1),
-              updatedLine,
-            ];
+          const newLines = [
+            ...prevLines.slice(0, prevLines.length - 1),
+            updatedLine,
+          ];
 
-            onLineUpdate?.(updatedLine);
+          onLineUpdate?.(updatedLine);
 
-            return newLines;
-          });
-
-          pending = false;
+          return newLines;
         });
-      }
+
+        pending = false;
+      });
     };
 
     const handleMouseUp = (mouseEvent: MouseEvent) => {
@@ -201,6 +220,95 @@ export default function DrawArea({
     };
   }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const point = getTouchSvgCoords(e);
+    const newLine: Line = {
+      points: [point],
+      color: actualStrokeColor,
+      width: strokeWidth,
+      id: generateId(),
+    };
+
+    setLocalLines((prevLines) => [...prevLines, newLine]);
+    setIsDrawing(true);
+    onLineStart?.(newLine);
+  };
+
+  useEffect(() => {
+    let pending = false;
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDrawing || pending) {
+        return;
+      }
+
+      pending = true;
+      const point = getTouchSvgCoords(e);
+
+      // throttles path updates to at most once per frame
+      // at least, that's the intention
+      requestAnimationFrame(() => {
+        setLocalLines((prevLines) => {
+          if (prevLines.length === 0) return prevLines;
+
+          const lastLine = prevLines[prevLines.length - 1];
+          const last = lastLine.points[lastLine.points.length - 1];
+          const dx = point.x - last.x;
+          const dy = point.y - last.y;
+          const dist2 = dx * dx + dy * dy;
+
+          if (dist2 < 1) return prevLines;
+
+          const k = 0.25;
+          const smoothed = {
+            x: last.x * (1 - k) + point.x * k,
+            y: last.y * (1 - k) + point.y * k,
+          };
+
+          const updatedLine = {
+            ...lastLine,
+            points: [...lastLine.points, smoothed],
+          };
+
+          const newLines = [
+            ...prevLines.slice(0, prevLines.length - 1),
+            updatedLine,
+          ];
+
+          onLineUpdate?.(updatedLine);
+
+          return newLines;
+        });
+
+        pending = false;
+      });
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const point = getTouchSvgCoords(e, true); // use changedTouches
+      if (!point) return;
+
+      if (isDrawing) {
+        const currentLine = localLines[localLines.length - 1];
+        if (currentLine) {
+          const updatedLine = {
+            ...currentLine,
+            points: [...currentLine.points, point],
+          };
+          onLineEnd?.(updatedLine);
+        }
+      }
+
+      setIsDrawing(false);
+    };
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
+
   const { containerRef, width, height } = useAspectRatio();
 
   return (
@@ -215,6 +323,7 @@ export default function DrawArea({
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
             ref={svgRef}
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
             preserveAspectRatio="xMidYMid meet"
             width="100%"
             height="100%"
