@@ -244,12 +244,9 @@ export default function DrawArea({
   }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
 
   return (
-    <div
-  className="flex flex-col items-center justify-center relative 
-             w-full max-w-[800px] aspect-[800/550]"
->
+    <div className="flex flex-col items-center justify-center relative w-full">
   {/* Canvas container */}
-  <div className="nes-container w-full h-full relative" style={{ padding: 0 }}>
+  <div className="nes-container w-full h-full max-w-[800px] max-h-[530px] aspect-[800/530] relative" style={{ padding: 0 }}>
     <svg
       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
       ref={svgRef}

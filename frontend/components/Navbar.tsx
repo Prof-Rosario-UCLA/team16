@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { logout } from "@/utils/api";
+import { useState } from "react";
+import { Menu, X } from "lucide-react"; // Optional: use Lucide icons
+
 
 export default function Navbar() {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+
 
   async function handleLogout() {
     try {
@@ -22,30 +27,56 @@ export default function Navbar() {
   }
 
   return (
-    <div className="absolute inset-0 z-50 h-[var(--navbar-height)] px-10 pt-10 flex justify-between items-center">
-      {/* Left side: Logo */}
+    <div className="absolute inset-x-0 top-0 z-50 h-[var(--navbar-height)] px-4 py-3 flex items-center justify-between bg-blue-500">
+      {/* Logo */}
       <Link
         href="/"
-        className="font-bold hover:underline"
-        style={{ color: "black" }}
+        className="font-bold !text-white text-lg hover:underline"
       >
         doodly
       </Link>
 
-      {/* Right side: Links */}
-      <div className="flex items-center space-x-4">
-        <Link href="/leaderboard" className="hover:underline">
+      {/* Desktop Links */}
+      <div className="hidden sm:flex items-center space-x-4">
+        <Link href="/leaderboard" className="hover:underline !text-white">
           Leaderboard
         </Link>
         <button
           onClick={handleLogout}
-          className="hover:underline cursor-pointer nes-btn is-normal !px-1 !py-1"
-          type="button"
-          aria-label="Logout"
+          className="nes-btn is-normal !text-sm !px-1 !py-1"
         >
           Logout
         </button>
       </div>
+
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="nes-btn !sm:hidden !p-2 !focus:outline-none"
+        aria-label="Toggle Menu"
+      >
+        {isOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full right-4 mt-2 w-40 bg-white shadow-lg rounded-md sm:hidden z-50">
+          <Link
+            href="/leaderboard"
+            className="block !text-xs !sm:text-sm px-4 py-2 !hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            Leaderboard
+          </Link>
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              handleLogout();
+            }}
+            className="block w-full text-left px-4 !py-2 text-xs !sm:text-sm hover:bg-gray-100"
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </div>
   );
 }
