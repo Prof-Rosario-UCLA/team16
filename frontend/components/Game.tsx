@@ -95,11 +95,8 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnEnding(false);
       setCurrWord(""); // clear out current word at the start of this round
 
-      const initialDiffs: Record<string, number> = {};
-      players.forEach((player: Player) => {
-        initialDiffs[player.name] = 0;
-      });
-      setPointDifferences(initialDiffs);
+      // reset point differences
+      setPointDifferences({});
 
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
@@ -144,7 +141,7 @@ export default function Game({ gameId }: { gameId: string }) {
       socket.off("start_turn");
       socket.off("game_ended");
     };
-  }, [socket, gameId, router]);
+  }, [socket, gameId, router, user?.username]);
 
   useEffect(() => {
     if (!socket) return;
@@ -170,7 +167,7 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
   return (
-    <div className="relative flex flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-200 overflow-hidden pt-[var(--navbar-height)]">
+    <div className="relative flex flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
       {turnStarting && (
         <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
@@ -220,39 +217,49 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Top bar */}
-      <div className="flex flex-row items-center w-full justify-center z-10">
+      <div className="flex flex-row items-center w-full mt-5 justify-center z-10">
         {!gameStarted ? (
           players.length >= 2 ? (
-            <button className="nes-btn is-success" onClick={startGame}>
+            <button className="nes-btn is-success !px-1 !py-1 !text-sm" onClick={startGame}>
               Start Game
             </button>
           ) : (
-            <div className="text-center text-lg font-bold">
+            <div className="text-center text-sm sm:text-lg font-bold">
               Waiting for players...
             </div>
           )
         ) : (
-          <div className="text-center text-lg font-bold">
-            Round: {roundNum}
-            <div className="nes-text is-error">Time Left {timeLeft}s</div>
-            <div className="mt-4">
-              {user?.username !== currDrawer && (
-                <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
-              )}
-              {user?.username === currDrawer && (
-                <>
-                  <span className="text-sm mt-1">My word: </span>
-                  <span className="text-sm nes-text is-primary">
-                    {" "}
-                    {currWord}
-                  </span>
-                </>
-              )}
+          <div className="flex flex-col items-center w-full">
+          <div className="flex flex-row items-center justify-between w-[99%] sm:gap-0 gap-2">
+            <div className="text-center text-sm sm:text-lg font-bold">
+              Round: {roundNum}
             </div>
-            <button className="nes-btn mt-2" onClick={endGame}>
-              End Game
-            </button>
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="nes-text text-lg font-bold text-red-500 text-sm sm:text-lg">Time Left {timeLeft}s</div>
+              <div>
+                {user?.username !== currDrawer && (
+                  <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+                )}
+                {user?.username === currDrawer && (
+                  <>
+                    <span className="text-sm sm:text-lg mt-1">My word: </span>
+                    <span className="text-sm sm:text-lg nes-text is-primary">
+                      {" "}
+                      {currWord}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+              <button
+                type="submit"
+                className="nes-btn is-warning !px-1 !py-1 !text-xs !leading-none"
+                onClick={endGame}
+              >
+                End Game
+              </button>
           </div>
+        </div>
         )}
       </div>
 
@@ -284,24 +291,36 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Main content */}
-      <div className="flex flex-row items-center flex-1 pb-8 h-0 max-w-full gap-8 bg-blue-200 justify-center z-0">
-        <div className="flex flex-col min-w-3xs nes-container h-full gap-2 text-xs bg-white">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 w-full h-[100vh] px-2 overflow-hidden">
+        <div className="flex flex-row lg:flex-col flex-shrink-0 w-full lg:w-60 h-20 lg:h-full max-h-full lg:max-h-[calc(90vh-2rem)] nes-container gap-2 text-xs bg-white overflow-y-auto">
           {players.map((player, index) => (
             <div
               key={index}
-              className="flex flex-col justify-start items-start nes-container"
+              className="flex flex-col lg:flex-col flex-row justify-start items-center lg:items-start nes-container gap-1"
             >
-              <div className="nes-text is-primary">{player.name}</div>
-              <div className="nes-text is-error">{player.points} points</div>
+              <div className="nes-text is-primary text-xxs lg:text-xs sm:mr-2">
+                {player.name}
+              </div>
+              <div>
+              <span className="nes-text is-error text-xxs lg:text-sm">
+                {player.points} 
+              </span>
+              <span className="hidden sm:inline nes-text is-error text-xxs lg:text-sm">
+                &nbsp;points
+              </span>
+              </div>
             </div>
           ))}
         </div>
 
-        <DrawAreaSockets user={username} gameStarted={gameStarted} />
+        
+          <div className="flex lg:w-full lg:h-full max-width-[500px] items-center justify-center">
+            <DrawAreaSockets user={username} gameStarted={gameStarted} />
+          </div>
 
-        <div className="h-full flex w-80">
-          <GameChat />
-        </div>
+          <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
+            <GameChat />
+          </div>
       </div>
     </div>
   );

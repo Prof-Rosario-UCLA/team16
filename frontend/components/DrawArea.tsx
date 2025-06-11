@@ -7,7 +7,7 @@ import { customAlphabet } from "nanoid";
 // import { DrawingLineWasm } from "@/components/DrawingLineWasm";
 import { DrawingLine } from "@/components/DrawingLine";
 import playSound from "@/utils/playSound"
-import { pointsToPath } from "@/components/DrawingLine";
+// import { pointsToPath } from "@/components/DrawingLine";
 // const USE_WASM = false;
 const Line = DrawingLine;
 
@@ -244,53 +244,51 @@ export default function DrawArea({
   }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
 
   return (
-    <div
-      className={`nes-container h-full w-auto relative`}
-      style={{
-        padding: 0,
-        aspectRatio: `${VIEWBOX_WIDTH}/${VIEWBOX_HEIGHT}`,
-      }}
+    <div className="flex flex-col items-center justify-center relative w-full">
+  {/* Canvas container */}
+  <div className="nes-container w-full h-full max-w-[800px] max-h-[530px] aspect-[800/530] relative" style={{ padding: 0 }}>
+    <svg
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+      ref={svgRef}
+      onMouseDown={handleMouseDown}
+      preserveAspectRatio="xMidYMid meet"
+      width="100%"
+      height="100%"
+      className="bg-white"
     >
-      <svg
-        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-        ref={svgRef}
-        onMouseDown={handleMouseDown}
-        preserveAspectRatio="xMidYMid meet"
-        width="100%"
-        height="100%"
-        className="bg-white"
-      >
-        {globalLines.concat(localLines).map((line) => (
-          <Line key={line.id} line={line} />
-        ))}
-      </svg>
+      {globalLines.concat(localLines).map((line) => (
+        <Line key={line.id} line={line} />
+      ))}
+    </svg>
 
-      {isCurrDrawer ? ( // render controls only if is curr drawer
-        <DrawAreaControls
-          strokeColor={strokeColor}
-          strokeWidth={strokeWidth}
-          erase={erase}
-          setStrokeColor={setStrokeColor}
-          setStrokeWidth={setStrokeWidth}
-          setErase={setErase}
-          clear={() => {
-            setLocalLines([]);
-            onClear?.();
-          }}
-          playSound={playSound}
-        />) : <></>
-      }
+    {isCurrDrawer ? (
+      <DrawAreaControls
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        erase={erase}
+        setStrokeColor={setStrokeColor}
+        setStrokeWidth={setStrokeWidth}
+        setErase={setErase}
+        clear={() => {
+          setLocalLines([]);
+          onClear?.();
+        }}
+        playSound={playSound}
+      />
+    ) : null}
+  </div>
 
-      {/* download */}
-      <div className="absolute bottom-[-4.5em] right-0 text-xs">
-        <button
-          className="nes-btn is-success"
-          onClick={() => exportDrawing(globalLines.concat(localLines))}
-        >
-          Download as PNG
-        </button>
-      </div>
-    </div>
+  {/* <div className="mt-2 self-end text-xs">
+    <button
+      className="nes-btn is-success"
+      onClick={() => exportDrawing(globalLines.concat(localLines))}
+    >
+      Download as PNG
+    </button>
+  </div> */}
+</div>
+
+
   );
 }
 
@@ -396,31 +394,31 @@ const DrawAreaControls = memo(
 );
 DrawAreaControls.displayName = "DrawAreaControls";
 
-const exportDrawing = (lines: Line[]) => {
-  const scale = 3;
+// const exportDrawing = (lines: Line[]) => {
+//   const scale = 3;
 
-  const canvas = document.createElement("canvas");
-  canvas.width = VIEWBOX_WIDTH * scale;
-  canvas.height = VIEWBOX_HEIGHT * scale;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.scale(scale, scale); // scale so we're still in the same coordinate system
+//   const canvas = document.createElement("canvas");
+//   canvas.width = VIEWBOX_WIDTH * scale;
+//   canvas.height = VIEWBOX_HEIGHT * scale;
+//   const ctx = canvas.getContext("2d");
+//   if (!ctx) return;
+//   ctx.fillStyle = "white";
+//   ctx.fillRect(0, 0, canvas.width, canvas.height);
+//   ctx.scale(scale, scale); // scale so we're still in the same coordinate system
 
-  ctx.lineCap = "round";
-  lines.forEach((line) => {
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = line.width;
-    ctx.beginPath();
-    const path = new Path2D();
-    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
-    ctx.stroke(path);
-  });
-  const img = new Image();
-  img.src = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.href = img.src;
-  link.download = "drawing.png";
-  link.click();
-};
+//   ctx.lineCap = "round";
+//   lines.forEach((line) => {
+//     ctx.strokeStyle = line.color;
+//     ctx.lineWidth = line.width;
+//     ctx.beginPath();
+//     const path = new Path2D();
+//     path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+//     ctx.stroke(path);
+//   });
+//   const img = new Image();
+//   img.src = canvas.toDataURL("image/png");
+//   const link = document.createElement("a");
+//   link.href = img.src;
+//   link.download = "drawing.png";
+//   link.click();
+// };
