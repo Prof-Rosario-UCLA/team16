@@ -28,11 +28,17 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       localStorage.setItem("cachedUser", JSON.stringify(res));
     } catch (err) {
       console.warn("Not logged in:", err);
-      const cached = localStorage.getItem("cachedUser");
-      if (cached) {
-        setUser(JSON.parse(cached));
-      } else {
+      if (err instanceof Error && err.message === "JWT expired") {
+        localStorage.removeItem("cachedUser");
         setUser(null);
+      }
+      else {
+        const cached = localStorage.getItem("cachedUser");
+        if (cached) {
+          setUser(JSON.parse(cached));
+        } else {
+          setUser(null);
+        }
       }
     } finally {
       setLoading(false);
