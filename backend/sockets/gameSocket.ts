@@ -215,7 +215,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     }
   });
 
-  socket.on("end_turn", async () => {
+  socket.on("end_turn", async (time: number) => {
     const gameId = socket.data.gameId;
     if (!gameId) return;
 
@@ -226,9 +226,20 @@ export function setupGameSocket(io: Server, socket: Socket) {
       game.lines.clear();
       io.to(gameId).emit("clear_lines");
 
+      // give drawer some points
+      const drawer_score = 25 + Math.round(Math.max((game.round.endTime! - Date.now()) / 200, 0));
+
+      console.log(`drawerscore ${drawer_score}`);
+      game.players.forEach((player, index) => {
+        if (index === game.round.drawerIndex) {
+          player.points += drawer_score;
+          console.log(game.players);
+        }
+      })
+
       // show what the word was and the updated points
       io.to(gameId).emit("reveal_updated_points", {
-          players: game.players, word: game.round.word
+          new_players: game.players, word: game.round.word, drawer_score: drawer_score
         });
 
       setTimeout(async () => {
@@ -327,6 +338,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
             game.players.forEach((player: Player) => {
               if (player.name === user) {
                 player.points += score;
+                console.log(`guesser ${player.name} score ${score}`)
                 console.log(game.players);
 
                 // share that user guessed correctly

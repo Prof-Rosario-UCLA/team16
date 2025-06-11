@@ -42,6 +42,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
   const [pointDifferences, setPointDifferences] = useState<Record<string, number>>({});
+  const [drawerScore, setDrawerScore] = useState(0);
 
   const startGame = () => {
     if (!socket) return;
@@ -112,9 +113,17 @@ export default function Game({ gameId }: { gameId: string }) {
     });
 
     // show updated points and the correct word after drawing time is up
-    socket.on("reveal_updated_points", ({ players, word }) => {
+    socket.on("reveal_updated_points", ({ new_players, word, drawer_score }) => {
+      // const newDiffs = pointDifferences;
+      // players.forEach((player: Player, index) => { // update drawer's new points
+      //   if (player.name === currDrawer) {
+      //     newDiffs[player.name] = drawer_score;
+      //   }
+      // })
+      // setPointDifferences(newDiffs)
+      setDrawerScore(drawer_score)
       setTurnEnding(true);
-      setPlayers(players);
+      setPlayers(new_players);
       setCurrWord(word);
     });
 
@@ -163,7 +172,7 @@ export default function Game({ gameId }: { gameId: string }) {
         const isDrawer = user?.username === currDrawer;
 
         if (isDrawer) {
-          socket.emit("end_turn"); // only want to emit end_turn once (only the drawer emits)
+          socket.emit("end_turn", {time: Date.now()}); // only want to emit end_turn once (only the drawer emits)
         }
       }
     }, 1000);
@@ -202,7 +211,10 @@ export default function Game({ gameId }: { gameId: string }) {
               {players
                 .sort((a, b) => b.points - a.points)
                 .map((player, idx) => {
-                  const diff = pointDifferences[player.name] ?? 0;
+                  let diff = pointDifferences[player.name] ?? 0;
+                  if (player.name === currDrawer) {
+                    diff = drawerScore;   
+                  }
                   return (
                     <li key={idx} className="flex justify-between px-4 items-center">
                       <span>
