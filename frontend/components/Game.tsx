@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import playSound from "@/utils/playSound";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencil } from "@fortawesome/free-solid-svg-icons";
 
 type User = {
   username: string;
@@ -35,11 +37,16 @@ export default function Game({ gameId }: { gameId: string }) {
   // round info
   const [roundNum, setRoundNum] = useState(0);
   const [currWord, setCurrWord] = useState(""); // only defined for current drawer
-  const [wordLength, setWordLength] = useState(0);
+  // const [wordLength, setWordLength] = useState(0);
+  const [maskedWord, setMaskedWord] = useState("");
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
-  const [pointDifferences, setPointDifferences] = useState<Record<string, number>>({});
+  const [pointDifferences, setPointDifferences] = useState<
+    Record<string, number>
+  >({});
+  const [drawerScore, setDrawerScore] = useState(0);
+  const [isGuessing, setIsGuessing] = useState(true);
 
   const startGame = () => {
     if (!socket) return;
@@ -67,21 +74,31 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
-    socket.on("correct_guess", ({ user: guesser, pointChange, players, activeGuessers }) => {
-      setPlayers(players);
-      // track difference in points
-      setPointDifferences((prevDiffs) => ({
-        ...prevDiffs,
-        [guesser]: pointChange,
-      }));
+    socket.on(
+      "correct_guess",
+      ({ user: guesser, currWord, pointChange, players, activeGuessers }) => {
+        setPlayers(players);
+        // track difference in points
+        setPointDifferences((prevDiffs) => ({
+          ...prevDiffs,
+          [guesser]: pointChange,
+        }));
 
-      // end the turn once everyone (besides drawer) has guessed correctly
-      const allGuessed = Object.values(activeGuessers).every((val) => val === false);
-      const isGuesser = user?.username === guesser;
-      if (allGuessed && isGuesser) {
-        socket.emit("end_turn"); // only send end_turn once (last guesser sends it)
+        if (guesser === user?.username) {
+          setIsGuessing(false);
+          setCurrWord(currWord);
+        }
+
+        // end the turn once everyone (besides drawer) has guessed correctly
+        const allGuessed = Object.values(activeGuessers).every(
+          (val) => val === false
+        );
+        const isGuesser = user?.username === guesser;
+        if (allGuessed && isGuesser) {
+          socket.emit("end_turn"); // only send end_turn once (last guesser sends it)
+        }
       }
-    });
+    );
 
     socket.on("error_message", ({ message, redirectUrl }) => {
       alert(message);
@@ -90,7 +107,7 @@ export default function Game({ gameId }: { gameId: string }) {
       }
     });
 
-    socket.on("reveal_drawer", ({ roundNum, currDrawer, wordLength }) => {
+    socket.on("reveal_drawer", ({ roundNum, currDrawer, maskedWord }) => {
       setGameStarted(true);
       setTurnEnding(false);
       setCurrWord(""); // clear out current word at the start of this round
@@ -101,17 +118,24 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
       setCurrDrawer(currDrawer);
-      setWordLength(wordLength);
+      // setWordLength(wordLength);
+      setMaskedWord(maskedWord);
       setTurnActive(false);
+      setIsGuessing(true);
+      setCurrWord("");
       playSound("newround");
     });
 
     // show updated points and the correct word after drawing time is up
-    socket.on("reveal_updated_points", ({ players, word }) => {
-      setTurnEnding(true);
-      setPlayers(players);
-      setCurrWord(word);
-    });
+    socket.on(
+      "reveal_updated_points",
+      ({ new_players, word, drawer_score }) => {
+        setDrawerScore(drawer_score);
+        setTurnEnding(true);
+        setPlayers(new_players);
+        setCurrWord(word);
+      }
+    );
 
     socket.on("reveal_word_private", ({ word }) => {
       setCurrWord(word);
@@ -158,7 +182,7 @@ export default function Game({ gameId }: { gameId: string }) {
         const isDrawer = user?.username === currDrawer;
 
         if (isDrawer) {
-          socket.emit("end_turn"); // only want to emit end_turn once (only the drawer emits)
+          socket.emit("end_turn", { time: Date.now() }); // only want to emit end_turn once (only the drawer emits)
         }
       }
     }, 1000);
@@ -191,22 +215,34 @@ export default function Game({ gameId }: { gameId: string }) {
           <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
             <div className="mb-5">
               <h1 className="text-lg nes-text">The word was... </h1>
-              <p className="text-lg nes-text is-success uppercase">{currWord}</p>
+              <p className="text-lg nes-text is-success uppercase">
+                {currWord}
+              </p>
             </div>
             <ul className="space-y-2">
               {players
                 .sort((a, b) => b.points - a.points)
                 .map((player, idx) => {
-                  const diff = pointDifferences[player.name] ?? 0;
+                  let diff = pointDifferences[player.name] ?? 0;
+                  if (player.name === currDrawer) {
+                    diff = drawerScore;
+                  }
                   return (
-                    <li key={idx} className="flex justify-between px-4 items-center">
+                    <li
+                      key={idx}
+                      className="flex justify-between px-4 items-center"
+                    >
                       <span>
                         <span className="mr-2">{idx + 1}.</span>
-                        <span className="nes-text is-primary">{player.name}</span>
+                        <span className="nes-text is-primary">
+                          {player.name}
+                        </span>
                         <span className="nes-text is-success"> +{diff}</span>
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="nes-text is-error">{player.points} pts</span>
+                        <span className="nes-text is-error">
+                          {player.points} pts
+                        </span>
                       </span>
                     </li>
                   );
@@ -220,7 +256,10 @@ export default function Game({ gameId }: { gameId: string }) {
       <div className="flex flex-row items-center w-full mt-5 justify-center z-10">
         {!gameStarted ? (
           players.length >= 2 ? (
-            <button className="nes-btn is-success !px-1 !py-1 !text-sm" onClick={startGame}>
+            <button
+              className="nes-btn is-success !px-1 !py-1 !text-sm"
+              onClick={startGame}
+            >
               Start Game
             </button>
           ) : (
@@ -230,27 +269,29 @@ export default function Game({ gameId }: { gameId: string }) {
           )
         ) : (
           <div className="flex flex-col items-center w-full">
-          <div className="flex flex-row items-center justify-between w-[99%] sm:gap-0 gap-2">
-            <div className="text-center text-sm sm:text-lg font-bold">
-              Round: {roundNum}
-            </div>
-            <div className="flex flex-col items-center justify-center text-center">
-              <div className="nes-text text-lg font-bold text-red-500 text-sm sm:text-lg">Time Left {timeLeft}s</div>
-              <div>
-                {user?.username !== currDrawer && (
-                  <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
-                )}
-                {user?.username === currDrawer && (
-                  <>
-                    <span className="text-sm sm:text-lg mt-1">My word: </span>
-                    <span className="text-sm sm:text-lg nes-text is-primary">
-                      {" "}
-                      {currWord}
-                    </span>
-                  </>
-                )}
+            <div className="flex flex-row items-center justify-between w-[99%] sm:gap-0 gap-2">
+              <div className="text-center text-sm sm:text-lg font-bold">
+                Round: {roundNum}
+                <div className="nes-text is-error">Time Left {timeLeft}s</div>
+                <div className="mt-4">
+                  {user?.username !== currDrawer && isGuessing && (
+                    // <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+                    <div className="text-lg mt-1">{maskedWord}</div>
+                  )}
+                  {user?.username !== currDrawer && !isGuessing && (
+                    <div className="text-lg mt-1">{currWord}</div>
+                  )}
+                  {user?.username === currDrawer && (
+                    <>
+                      <span className="text-sm mt-1">My word: </span>
+                      <span className="text-sm nes-text is-primary">
+                        {" "}
+                        {currWord}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
               <button
                 type="submit"
                 className="nes-btn is-warning !px-1 !py-1 !text-xs !leading-none"
@@ -258,8 +299,8 @@ export default function Game({ gameId }: { gameId: string }) {
               >
                 End Game
               </button>
+            </div>
           </div>
-        </div>
         )}
       </div>
 
@@ -296,31 +337,37 @@ export default function Game({ gameId }: { gameId: string }) {
           {players.map((player, index) => (
             <div
               key={index}
-              className="flex flex-col lg:flex-col flex-row justify-start items-center lg:items-start nes-container gap-1"
+              className="flex lg:flex-col flex-row justify-start items-center lg:items-start nes-container gap-1"
             >
               <div className="nes-text is-primary text-xxs lg:text-xs sm:mr-2">
                 {player.name}
               </div>
               <div>
-              <span className="nes-text is-error text-xxs lg:text-sm">
-                {player.points} 
-              </span>
-              <span className="hidden sm:inline nes-text is-error text-xxs lg:text-sm">
-                &nbsp;points
-              </span>
+                <span className="nes-text is-error text-xxs lg:text-sm">
+                  {player.points}
+                </span>
+                <span className="hidden sm:inline nes-text is-error text-xxs lg:text-sm">
+                  &nbsp;points
+                </span>
+                {currDrawer === player.name && (
+                  <FontAwesomeIcon
+                    icon={faPencil}
+                    transform={{ y: -2 }}
+                    className="ml-2 align-middle"
+                  />
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        
-          <div className="flex lg:w-full lg:h-full max-width-[500px] items-center justify-center">
-            <DrawAreaSockets user={username} gameStarted={gameStarted} />
-          </div>
+        <div className="flex lg:w-full lg:h-full max-width-[500px] items-center justify-center">
+          <DrawAreaSockets user={username} gameStarted={gameStarted} />
+        </div>
 
-          <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
-            <GameChat />
-          </div>
+        <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
+          <GameChat />
+        </div>
       </div>
     </div>
   );
