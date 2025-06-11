@@ -365,6 +365,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           message,
           user: socket.data.user,
           isPublic: isPublic,
+          msgType: "chat"
         });
       } else {
         // otherwise, send to all non active guessers
@@ -377,6 +378,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
                   message,
                   user,
                   isPublic: isPublic,
+                  msgType: "chat"
                 });
               }
             }

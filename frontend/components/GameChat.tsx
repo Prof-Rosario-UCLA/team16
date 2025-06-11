@@ -5,6 +5,7 @@ type Message = {
   user?: string;
   message: string;
   isPublic: boolean;
+  msgType: string; // for styling: "playerchange" : gray, "chat": black, "correct_guess": green
 };
 
 export default function GameChat() {
@@ -24,6 +25,7 @@ export default function GameChat() {
         {
           message: `${message.user} joined the game`,
           isPublic: true,
+          msgType: "player_change"
         },
         ...prevMessages,
       ]);
@@ -33,6 +35,7 @@ export default function GameChat() {
         {
           message: `${message.user} left the game`,
           isPublic: true,
+          msgType: "player_change"
         },
         ...prevMessages,
       ]);
@@ -42,6 +45,7 @@ export default function GameChat() {
         {
           message: `${message.user} guessed the word correctly!`,
           isPublic: true,
+          msgType: "correct_guess"
         },
         ...prevMessages,
       ]);
@@ -52,6 +56,42 @@ export default function GameChat() {
       socket.off("user_left");
     };
   }, [socket]);
+
+  const renderMessage = (message: Message, index: number) => {
+    if (message.msgType === "chat") {
+      return (
+        <div key={index}>
+          {message.isPublic ? (
+            <span>
+              {message.user && (
+                <span className="nes-text is-success">{`${message.user} `}</span>
+              )}
+              <span className="break-words">{message.message}</span>
+            </span>
+          ) : (
+            <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md block max-w-full inline-block">
+              {message.user && (
+                <span className="nes-text">{`${message.user} `}</span>
+              )}
+              <span className="break-words">{message.message}</span>
+            </span>
+          )}
+        </div>
+      );
+    } else if (message.msgType === "player_change") {
+      return (
+        <div key={index}>
+          <span className="text-gray-500 break-words">{message.message}</span>
+        </div>
+      )
+    } else if (message.msgType === "correct_guess") {
+      return (
+        <div key={index}>
+          <span className="text-[#92cc41] break-words">{message.message}</span>
+        </div>
+      )
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs">
@@ -64,23 +104,7 @@ export default function GameChat() {
               message,
               index // check render messages differently based on whehter or not they're public
             ) => (
-              <div key={index}>
-                {message.isPublic ? (
-                  <span>
-                    {message.user && (
-                      <span className="nes-text is-success">{`${message.user} `}</span>
-                    )}
-                    <span className="break-words">{message.message}</span>
-                  </span>
-                ) : (
-                  <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md block max-w-full inline-block">
-                    {message.user && (
-                      <span className="nes-text">{`${message.user} `}</span>
-                    )}
-                    <span className="break-words">{message.message}</span>
-                  </span>
-                )}
-              </div>
+              renderMessage(message, index)
             )
           )
         )}
