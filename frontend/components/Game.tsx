@@ -43,6 +43,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const [currDrawer, setCurrDrawer] = useState("");
   const [pointDifferences, setPointDifferences] = useState<Record<string, number>>({});
   const [drawerScore, setDrawerScore] = useState(0);
+  const [isGuessing, setIsGuessing] = useState(true);
 
   const startGame = () => {
     if (!socket) return;
@@ -70,13 +71,18 @@ export default function Game({ gameId }: { gameId: string }) {
       setPlayers(players);
     });
 
-    socket.on("correct_guess", ({ user: guesser, pointChange, players, activeGuessers }) => {
+    socket.on("correct_guess", ({ user: guesser, currWord, pointChange, players, activeGuessers }) => {
       setPlayers(players);
       // track difference in points
       setPointDifferences((prevDiffs) => ({
         ...prevDiffs,
         [guesser]: pointChange,
       }));
+
+      if (guesser === user?.username) {
+        setIsGuessing(false);
+        setCurrWord(currWord);
+      }
 
       // end the turn once everyone (besides drawer) has guessed correctly
       const allGuessed = Object.values(activeGuessers).every((val) => val === false);
@@ -109,18 +115,13 @@ export default function Game({ gameId }: { gameId: string }) {
       setCurrDrawer(currDrawer);
       setWordLength(wordLength);
       setTurnActive(false);
+      setIsGuessing(true);
+      setCurrWord("");
       playSound("newround");
     });
 
     // show updated points and the correct word after drawing time is up
     socket.on("reveal_updated_points", ({ new_players, word, drawer_score }) => {
-      // const newDiffs = pointDifferences;
-      // players.forEach((player: Player, index) => { // update drawer's new points
-      //   if (player.name === currDrawer) {
-      //     newDiffs[player.name] = drawer_score;
-      //   }
-      // })
-      // setPointDifferences(newDiffs)
       setDrawerScore(drawer_score)
       setTurnEnding(true);
       setPlayers(new_players);
@@ -250,8 +251,13 @@ export default function Game({ gameId }: { gameId: string }) {
             Round: {roundNum}
             <div className="nes-text is-error">Time Left {timeLeft}s</div>
             <div className="mt-4">
-              {user?.username !== currDrawer && (
+              {(user?.username !== currDrawer && isGuessing) && (
                 <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+              )}
+              {(user?.username !== currDrawer && !isGuessing) && (
+                <div className="text-lg mt-1">
+                  {currWord}
+                </div>
               )}
               {user?.username === currDrawer && (
                 <>
