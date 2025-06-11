@@ -190,7 +190,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       io.to(gameId).emit("reveal_drawer", {
         roundNum: game.round.roundNum,
         currDrawer: game.players[drawerIndex].name,
-        wordLength: game.round.word?.length ?? 0,
+        // wordLength: game.round.word?.length ?? 0,
+        maskedWord: maskWord(game.round.word) ?? ""
       });
 
       // only reveal word to the current drawer
@@ -215,7 +216,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
     }
   });
 
-  socket.on("end_turn", async () => {
+  socket.on("end_turn", async (time: number) => {
     const gameId = socket.data.gameId;
     if (!gameId) return;
 
@@ -226,9 +227,25 @@ export function setupGameSocket(io: Server, socket: Socket) {
       game.lines.clear();
       io.to(gameId).emit("clear_lines");
 
+      // give drawer some points
+      let drawer_score = Math.round(Math.max((game.round.endTime! - Date.now()) / 200, 0));
+      game.round.activeGuessers?.forEach((guessing, username) => {
+        if (!guessing && username !== game.players[game.round.drawerIndex!].name) {
+          drawer_score += 25
+        }
+      })
+
+      console.log(`drawerscore ${drawer_score}`);
+      game.players.forEach((player, index) => {
+        if (index === game.round.drawerIndex) {
+          player.points += drawer_score;
+          console.log(game.players);
+        }
+      })
+
       // show what the word was and the updated points
       io.to(gameId).emit("reveal_updated_points", {
-          players: game.players, word: game.round.word
+          new_players: game.players, word: game.round.word, drawer_score: drawer_score
         });
 
       setTimeout(async () => {
@@ -271,7 +288,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
         io.to(gameId).emit("reveal_drawer", {
           roundNum: nextRoundNum,
           currDrawer: game.players[nextDrawerIndex].name,
-          wordLength: game.round.word?.length ?? 0,
+          // wordLength: game.round.word?.length ?? 0,
+          maskedWord: maskWord(game.round.word) ?? ""
         });
 
         // only reveal word to the current drawer
@@ -327,11 +345,13 @@ export function setupGameSocket(io: Server, socket: Socket) {
             game.players.forEach((player: Player) => {
               if (player.name === user) {
                 player.points += score;
+                console.log(`guesser ${player.name} score ${score}`)
                 console.log(game.players);
 
                 // share that user guessed correctly
                 io.to(gameId).emit("correct_guess", {
                   user: user,
+                  currWord: game.round.word,
                   pointChange: score,
                   players: game.players,
                   activeGuessers: Object.fromEntries(game.round.activeGuessers || []), // so client knows who has guessed it correctly
@@ -353,6 +373,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
           message,
           user: socket.data.user,
           isPublic: isPublic,
+          msgType: "chat"
         });
       } else {
         // otherwise, send to all non active guessers
@@ -365,6 +386,7 @@ export function setupGameSocket(io: Server, socket: Socket) {
                   message,
                   user,
                   isPublic: isPublic,
+                  msgType: "chat"
                 });
               }
             }
@@ -471,4 +493,11 @@ export function setupGameSocket(io: Server, socket: Socket) {
     // free up some memory
     games.delete(game.id);
   };
+
+  const maskWord = (word: string | null) => {
+    if (word === null) {
+      return "";
+    }
+    return word.split("").map((ch)=>(ch === " " ? " " : "_"));
+  }
 }
