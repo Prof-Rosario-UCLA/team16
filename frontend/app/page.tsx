@@ -9,6 +9,7 @@ export default function Home() {
   const router = useRouter();
   const { user, loading } = useUser() ?? {};
   const [isOnline, setIsOnline] = useState(true);
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -61,43 +62,98 @@ export default function Home() {
     router.push(`/game/${gameId}`);
   };
 
-  if (loading)
+  const handleJoinGame = () => {
+    if (!code.trim()) return;
+    const gameCode = code.trim();
+    // ensure game code is an actual game
+
+    router.push(`/game/${gameCode}`);
+  };
+
+  if (loading || !user)
     return (
       <div className="flex items-center justify-center w-full h-screen">
         Loading...
       </div>
     );
 
-  if (!user) return null; // Or a placeholder until redirect
-
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen gap-4">
+    <main className="main-flex items-center justify-center w-full h-screen gap-4">
       {isOnline ? (
-        <>
-          <h1 className="text-2xl font-bold">Welcome, {user.username}!</h1>
+        <section className="section-flex flex-col items-center justify-center w-full h-full gap-4">
+          <header>
+            <h1 className="text-2xl font-bold px-4 text-center">
+              Welcome, {user.username}!
+            </h1>
+          </header>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleJoinGame();
+            }}
+            className="flex flex-col sm:flex-row items-center gap-2 px-4"
+            aria-label="Join existing game"
+          >
+            <input
+              type="text"
+              className="nes-input"
+              placeholder="Enter game code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              maxLength={6}
+              aria-label="Game code input"
+            />
+            <button
+              type="submit"
+              className="nes-btn is-success"
+              aria-label="Join game"
+            >
+              Join
+            </button>
+          </form>
+
           <button
             type="button"
             className="nes-btn is-primary"
             onClick={handleCreateGame}
+            aria-label="Create game"
           >
             Create Game
           </button>
-        </>
+        </section>
       ) : (
-        <>
-          <div className="flex flex-col items-center gap-2">
+        <section className="section-flex flex flex-col items-center gap-4">
+          <header className="px-4 text-center">
             <h1 className="text-2xl font-bold">You are offline</h1>
             <p className="text-lg">Please check your internet connection.</p>
-          </div>
-          <button
-            type="button"
-            className="nes-btn is-disabled"
-            disabled
+          </header>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleJoinGame();
+            }}
+            className="flex flex-col items-center gap-2 px-4"
+            aria-label="Join game (disabled)"
           >
-            Create Game (Offline)
+            <input
+              type="text"
+              className="nes-input w-200"
+              placeholder="Enter game code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              maxLength={6}
+              aria-label="Game code input"
+              disabled
+            />
+          </form>
+
+          <button type="button" className="nes-btn is-disabled" disabled>
+            Create Game
           </button>
-        </>
+        </section>
       )}
-    </div>
+    </main>
   );
 }

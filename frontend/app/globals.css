@@ -5,6 +5,9 @@
   --background: #ffffff;
   --foreground: #171717;
   --navbar-height: 64px;
+  --navbar-color: #ACC8E5;
+  --primary-btn-color: #2072f7;
+  --success-btn-color: #37ab3b;
 }
 
 @theme inline {
@@ -22,6 +25,7 @@ body {
 .section-flex {
   display: flex;
 }
+
 .main-flex {
   display: flex;
 }
@@ -30,9 +34,24 @@ body {
   @apply p-4;
 }
 
-.nes-btn::after {
+/* .nes-btn::after {
   @apply pointer-events-none;
 }
+.nes-btn.is-primary {
+  @apply bg-[var(--primary-btn-color)] text-white;
+} */
+
+/* .nes-btn.is-primary::after {
+  @apply shadow-none;
+} */
+
+/* .nes-btn.is-success {
+  @apply bg-[var(--success-btn-color)] text-white;
+} */
+
+/* .nes-btn.is-success::after {
+  @apply shadow-none;
+} */
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important ; transition: none !important ; }

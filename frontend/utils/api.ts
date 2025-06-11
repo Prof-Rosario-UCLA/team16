@@ -58,7 +58,6 @@ export const getUser = async (): Promise<User|null> => {
     });
     return res.data;
   } catch (error) {
-    console.log(error);
     if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
       throw new Error("JWT expired");
     }
@@ -100,8 +99,7 @@ export const ping = async (): Promise<boolean> => {
       timeout: 3000,
     });
     return res.status === 200;
-  } catch (error) {
-    console.log("Ping failed", error);
+  } catch {
     return false;
   }
 }

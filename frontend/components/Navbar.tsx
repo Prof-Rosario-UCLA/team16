@@ -28,23 +28,24 @@ export default function Navbar() {
   }
 
   return (
-    <div className="absolute inset-x-0 top-0 z-50 h-[var(--navbar-height)] px-4 py-3 flex items-center justify-between bg-blue-500">
+    <div className="absolute inset-x-0 top-0 z-50 h-[var(--navbar-height)] px-4 py-3 flex items-center justify-between bg-[var(--navbar-color)]">
       {/* Logo */}
       <Link
         href="/"
-        className="font-bold !text-white text-lg hover:underline"
+        className="font-bold !text-black text-lg hover:underline"
       >
         doodly
       </Link>
 
       {/* Desktop Links */}
       <div className="hidden sm:flex items-center space-x-4">
-        <Link href="/leaderboard" className="hover:underline !text-white !text-sm">
+        <Link href="/leaderboard" className="hover:underline !text-black !text-sm">
           Leaderboard
         </Link>
         <button
           onClick={handleLogout}
           className="nes-btn is-normal !text-sm !px-1 !py-1"
+          aria-label="Logout"
         >
           Logout
         </button>
