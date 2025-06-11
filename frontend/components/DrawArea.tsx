@@ -328,6 +328,7 @@ export default function DrawArea({
             width="100%"
             height="100%"
             className="bg-white"
+            style={{ touchAction: "none" }}
           >
             {globalLines.concat(localLines).map((line) => (
               <Line key={line.id} line={line} />
