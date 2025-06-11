@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import playSound from "@/utils/playSound";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencil } from "@fortawesome/free-solid-svg-icons";
 
 type User = {
   username: string;
@@ -286,12 +288,23 @@ export default function Game({ gameId }: { gameId: string }) {
       {/* Main content */}
       <div className="flex flex-row items-center flex-1 pb-8 h-0 max-w-full gap-8 bg-blue-200 justify-center z-0">
         <div className="flex flex-col min-w-3xs nes-container h-full gap-2 text-xs bg-white">
-          {players.map((player, index) => (
+          {players.map((player, index) => player.name !== currDrawer ? (
             <div
               key={index}
               className="flex flex-col justify-start items-start nes-container"
             >
               <div className="nes-text is-primary">{player.name}</div>
+              <div className="nes-text is-error">{player.points} points</div>
+            </div>
+          ) : ( // curr drawer
+            <div
+              key={index}
+              className="flex flex-col justify-start items-start nes-container"
+            >
+              <div className="nes-text is-primary italic bg-[#c0dcfc] px-2 py-1 mb-1 rounded-md  ">
+                {player.name}
+                <FontAwesomeIcon icon={faPencil} transform={{ y: -2 }} className="ml-2 align-middle" />
+              </div>
               <div className="nes-text is-error">{player.points} points</div>
             </div>
           ))}

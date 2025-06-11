@@ -77,7 +77,7 @@ export default function GameChat() {
                     {message.user && (
                       <span className="nes-text">{`${message.user} `}</span>
                     )}
-                    <span className="break-words text-wrap">{message.message}</span>
+                    <span className="break-words">{message.message}</span>
                   </span>
                 )}
               </div>
