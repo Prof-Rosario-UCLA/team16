@@ -71,6 +71,7 @@ const RegisterPageComponent = () => {
           onChange={(e) => setUsername(e.target.value)}
           className="nes-input"
           required
+          maxLength={12}
         />
         <input
           type="password"

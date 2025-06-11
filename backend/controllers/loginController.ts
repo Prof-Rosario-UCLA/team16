@@ -8,6 +8,11 @@ dotenv.config();
 export const registerUser = asyncHandler(async (req: any, res: any) => {
   const { username, password } = req.body;
 
+  // validate username length
+  if (typeof username !== 'string' || username.length > 12) {
+    return res.status(400).json({ message: 'Username must be 12 characters or fewer' });
+  }
+
   // check if user exists
   const existingUser = await User.findOne({ username: username });
   if (existingUser) {
