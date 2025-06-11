@@ -39,7 +39,7 @@ export default function Navbar() {
         </Link>
         <button
           onClick={handleLogout}
-          className="hover:underline cursor-pointer nes-btn is-normal"
+          className="hover:underline cursor-pointer nes-btn is-normal !px-1 !py-1"
           type="button"
           aria-label="Logout"
         >

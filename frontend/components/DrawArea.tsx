@@ -245,52 +245,53 @@ export default function DrawArea({
 
   return (
     <div
-      className={`nes-container h-full w-auto relative`}
-      style={{
-        padding: 0,
-        aspectRatio: `${VIEWBOX_WIDTH}/${VIEWBOX_HEIGHT}`,
-      }}
+  className="flex flex-col items-center justify-center relative 
+             w-full max-w-[800px] aspect-[800/550]"
+>
+  {/* Canvas container */}
+  <div className="nes-container w-full h-full relative" style={{ padding: 0 }}>
+    <svg
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+      ref={svgRef}
+      onMouseDown={handleMouseDown}
+      preserveAspectRatio="xMidYMid meet"
+      width="100%"
+      height="100%"
+      className="bg-white"
     >
-      <svg
-        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-        ref={svgRef}
-        onMouseDown={handleMouseDown}
-        preserveAspectRatio="xMidYMid meet"
-        width="100%"
-        height="100%"
-        className="bg-white"
-      >
-        {globalLines.concat(localLines).map((line) => (
-          <Line key={line.id} line={line} />
-        ))}
-      </svg>
+      {globalLines.concat(localLines).map((line) => (
+        <Line key={line.id} line={line} />
+      ))}
+    </svg>
 
-      {isCurrDrawer ? ( // render controls only if is curr drawer
-        <DrawAreaControls
-          strokeColor={strokeColor}
-          strokeWidth={strokeWidth}
-          erase={erase}
-          setStrokeColor={setStrokeColor}
-          setStrokeWidth={setStrokeWidth}
-          setErase={setErase}
-          clear={() => {
-            setLocalLines([]);
-            onClear?.();
-          }}
-          playSound={playSound}
-        />) : <></>
-      }
+    {isCurrDrawer ? (
+      <DrawAreaControls
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        erase={erase}
+        setStrokeColor={setStrokeColor}
+        setStrokeWidth={setStrokeWidth}
+        setErase={setErase}
+        clear={() => {
+          setLocalLines([]);
+          onClear?.();
+        }}
+        playSound={playSound}
+      />
+    ) : null}
+  </div>
 
-      {/* download */}
-      <div className="absolute bottom-[-4.5em] right-0 text-xs">
-        <button
-          className="nes-btn is-success"
-          onClick={() => exportDrawing(globalLines.concat(localLines))}
-        >
-          Download as PNG
-        </button>
-      </div>
-    </div>
+  {/* <div className="mt-2 self-end text-xs">
+    <button
+      className="nes-btn is-success"
+      onClick={() => exportDrawing(globalLines.concat(localLines))}
+    >
+      Download as PNG
+    </button>
+  </div> */}
+</div>
+
+
   );
 }
 

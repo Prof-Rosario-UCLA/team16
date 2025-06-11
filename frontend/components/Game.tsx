@@ -220,7 +220,7 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Top bar */}
-      <div className="flex flex-row items-center w-full justify-center z-10">
+      <div className="flex flex-row items-center w-full mt-5 justify-center z-10">
         {!gameStarted ? (
           players.length >= 2 ? (
             <button className="nes-btn is-success" onClick={startGame}>
@@ -232,27 +232,37 @@ export default function Game({ gameId }: { gameId: string }) {
             </div>
           )
         ) : (
-          <div className="text-center text-lg font-bold">
-            Round: {roundNum}
-            <div className="nes-text is-error">Time Left {timeLeft}s</div>
-            <div className="mt-4">
-              {user?.username !== currDrawer && (
-                <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
-              )}
-              {user?.username === currDrawer && (
-                <>
-                  <span className="text-sm mt-1">My word: </span>
-                  <span className="text-sm nes-text is-primary">
-                    {" "}
-                    {currWord}
-                  </span>
-                </>
-              )}
+          <div className="flex flex-col items-center w-full">
+          <div className="flex flex-row items-center justify-between w-[99%]">
+            <div className="text-center text-lg font-bold">
+              Round: {roundNum}
             </div>
-            <button className="nes-btn mt-2" onClick={endGame}>
-              End Game
-            </button>
+            <div className="nes-text text-lg font-bold is-error">Time Left {timeLeft}s</div>
+            <div className="flex-start">
+              <button
+                type="submit"
+                className="nes-btn is-warning !px-1 !py-1 !text-xs !leading-none !h-8 !min-h-0"
+                onClick={endGame}
+              >
+                End Game
+              </button>
+            </div>
           </div>
+          <div>
+            {user?.username !== currDrawer && (
+              <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+            )}
+            {user?.username === currDrawer && (
+              <>
+                <span className="text-md mt-1">My word: </span>
+                <span className="text-md nes-text is-primary">
+                  {" "}
+                  {currWord}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
         )}
       </div>
 
@@ -284,24 +294,27 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Main content */}
-      <div className="flex flex-row items-center flex-1 pb-8 h-0 max-w-full gap-8 bg-blue-200 justify-center z-0">
-        <div className="flex flex-col min-w-3xs nes-container h-full gap-2 text-xs bg-white">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-4 md:gap-8 w-full h-[90vh] px-2 overflow-hidden">
+        <div className="flex flex-row lg:flex-col flex-shrink-0 w-full lg:w-48 xl:w-60 nes-container lg:h-48 h-30 lg:h-full gap-2 text-xs bg-white overflow-y-auto">
           {players.map((player, index) => (
             <div
               key={index}
               className="flex flex-col justify-start items-start nes-container"
             >
-              <div className="nes-text is-primary">{player.name}</div>
+              <div className="nes-text is-primary text-tiny lg:text-sm">{player.name}</div>
               <div className="nes-text is-error">{player.points} points</div>
             </div>
           ))}
         </div>
 
-        <DrawAreaSockets user={username} gameStarted={gameStarted} />
+        
+          <div className="flex-1 flex items-center justify-center">
+            <DrawAreaSockets user={username} gameStarted={gameStarted} />
+          </div>
 
-        <div className="h-full flex w-80">
-          <GameChat />
-        </div>
+          <div className="flex flex-col flex-shrink-0 w-full lg:w-52 xl:w-70 h-48 lg:h-full overflow-hidden">
+            <GameChat />
+          </div>
       </div>
     </div>
   );
