@@ -245,16 +245,19 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Top bar */}
-      <section className="section-flex flex-row items-center w-full mt-5 justify-center z-10">
+      <section 
+        className="section-flex flex-row items-center w-full mt-5 justify-center z-10" 
+        aria-label="Game controls and status"
+      >
         {!gameStarted ? (
           players.length >= 2 ? (
             <button className="nes-btn is-success !px-1 !py-1 !text-sm" onClick={startGame}>
               Start Game
             </button>
           ) : (
-            <div className="text-center text-sm sm:text-lg font-bold">
+            <p className="text-center text-sm sm:text-lg font-bold">
               Waiting for players...
-            </div>
+            </p>
           )
         ) : (
           <div className="flex flex-col items-center w-full">
