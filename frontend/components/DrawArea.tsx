@@ -112,43 +112,36 @@ export default function DrawArea({
     setIsDrawing(false);
   }, [clearLocalTrigger]);
 
-  const audioRef = useRef<HTMLAudioElement>(new Audio("/media/drawing.mp3")); 
-  const isPlayingRef = useRef(false);
+  // const audioRef = useRef<HTMLAudioElement>(new Audio("/media/drawing.mp3")); 
+  // const isPlayingRef = useRef(false);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    audio.preload = "auto";
+  // useEffect(() => {
+  //   const audio = audioRef.current;
+  //   audio.preload = "auto";
 
-    const onEnded = () => {
-      if (isPlayingRef.current) {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      }
-    };
-    audio.addEventListener("ended", onEnded);
-    audioRef.current = audio;
+  //   const onEnded = () => {
+  //     if (isPlayingRef.current) {
+  //       audio.currentTime = 0;
+  //       audio.play().catch(() => {});
+  //     }
+  //   };
+  //   audio.addEventListener("ended", onEnded);
+  //   audioRef.current = audio;
 
-    const onMouseUpWindow = () => {
-      if (isPlayingRef.current) {
-        isPlayingRef.current = false;
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    };
-    window.addEventListener("mouseup", onMouseUpWindow);
+  //   const onMouseUpWindow = () => {
+  //     if (isPlayingRef.current) {
+  //       isPlayingRef.current = false;
+  //       audio.pause();
+  //       audio.currentTime = 0;
+  //     }
+  //   };
+  //   window.addEventListener("mouseup", onMouseUpWindow);
 
-    return () => {
-      audio.removeEventListener("ended", onEnded);
-      audio.pause();
-    };
-  }, []);
-
-  // const stopAudio = () => {
-  //   const audio = audioRef.current!;
-  //   isPlayingRef.current = false;
-  //   audio.pause();
-  //   audio.currentTime = 0;
-  // }
+  //   return () => {
+  //     audio.removeEventListener("ended", onEnded);
+  //     audio.pause();
+  //   };
+  // }, []);
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
     if (isCurrDrawer) {
@@ -168,11 +161,11 @@ export default function DrawArea({
       setIsDrawing(true);
       onLineStart?.(newLine);
 
-      // play audio from begining
-      const audio = audioRef.current!;
-      isPlayingRef.current = true;
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
+      // // play audio from begining
+      // const audio = audioRef.current!;
+      // isPlayingRef.current = true;
+      // audio.currentTime = 0;
+      // audio.play().catch(() => {});
     }
   };
 
