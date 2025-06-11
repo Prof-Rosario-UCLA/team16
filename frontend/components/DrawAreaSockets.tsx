@@ -62,7 +62,7 @@ const DrawAreaSockets = ({
       setClearLocalTrigger((prev) => !prev);
     });
 
-    socket.on("reveal_info", ({ currDrawer }) => {
+    socket.on("reveal_drawer", ({ currDrawer }) => {
       setCurrDrawer(currDrawer);
     });
 
