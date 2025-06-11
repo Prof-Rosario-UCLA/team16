@@ -25,7 +25,7 @@ export default function GameChat() {
         {
           message: `${message.user} joined the game`,
           isPublic: true,
-          msgType: "player_change"
+          msgType: "player_change",
         },
         ...prevMessages,
       ]);
@@ -35,7 +35,7 @@ export default function GameChat() {
         {
           message: `${message.user} left the game`,
           isPublic: true,
-          msgType: "player_change"
+          msgType: "player_change",
         },
         ...prevMessages,
       ]);
@@ -45,7 +45,7 @@ export default function GameChat() {
         {
           message: `${message.user} guessed the word correctly!`,
           isPublic: true,
-          msgType: "correct_guess"
+          msgType: "correct_guess",
         },
         ...prevMessages,
       ]);
@@ -69,7 +69,7 @@ export default function GameChat() {
               <span className="break-words">{message.message}</span>
             </span>
           ) : (
-            <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md block max-w-full inline-block">
+            <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md max-w-full inline-block">
               {message.user && (
                 <span className="nes-text">{`${message.user} `}</span>
               )}
@@ -83,18 +83,18 @@ export default function GameChat() {
         <div key={index}>
           <span className="text-gray-500 break-words">{message.message}</span>
         </div>
-      )
+      );
     } else if (message.msgType === "correct_guess") {
       return (
         <div key={index}>
           <span className="text-[#92cc41] break-words">{message.message}</span>
         </div>
-      )
+      );
     }
-  }
+  };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs">
+    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs lg:max-w-72">
       <div className="!p-4 flex-grow overflow-y-auto flex flex-col-reverse gap-2 nes-container bg-white">
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>
@@ -103,9 +103,7 @@ export default function GameChat() {
             (
               message,
               index // check render messages differently based on whehter or not they're public
-            ) => (
-              renderMessage(message, index)
-            )
+            ) => renderMessage(message, index)
           )
         )}
       </div>
