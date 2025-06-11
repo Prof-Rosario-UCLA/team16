@@ -37,7 +37,8 @@ export default function Game({ gameId }: { gameId: string }) {
   // round info
   const [roundNum, setRoundNum] = useState(0);
   const [currWord, setCurrWord] = useState(""); // only defined for current drawer
-  const [wordLength, setWordLength] = useState(0);
+  // const [wordLength, setWordLength] = useState(0);
+  const [maskedWord, setMaskedWord] = useState("");
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
@@ -99,7 +100,7 @@ export default function Game({ gameId }: { gameId: string }) {
       }
     });
 
-    socket.on("reveal_drawer", ({ roundNum, currDrawer, wordLength }) => {
+    socket.on("reveal_drawer", ({ roundNum, currDrawer, maskedWord }) => {
       setGameStarted(true);
       setTurnEnding(false);
       setCurrWord(""); // clear out current word at the start of this round
@@ -113,7 +114,8 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
       setCurrDrawer(currDrawer);
-      setWordLength(wordLength);
+      // setWordLength(wordLength);
+      setMaskedWord(maskedWord);
       setTurnActive(false);
       setIsGuessing(true);
       setCurrWord("");
@@ -252,7 +254,8 @@ export default function Game({ gameId }: { gameId: string }) {
             <div className="nes-text is-error">Time Left {timeLeft}s</div>
             <div className="mt-4">
               {(user?.username !== currDrawer && isGuessing) && (
-                <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+                // <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
+                <div className="text-lg mt-1">{maskedWord}</div>
               )}
               {(user?.username !== currDrawer && !isGuessing) && (
                 <div className="text-lg mt-1">

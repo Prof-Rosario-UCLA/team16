@@ -190,7 +190,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
       io.to(gameId).emit("reveal_drawer", {
         roundNum: game.round.roundNum,
         currDrawer: game.players[drawerIndex].name,
-        wordLength: game.round.word?.length ?? 0,
+        // wordLength: game.round.word?.length ?? 0,
+        maskedWord: maskWord(game.round.word) ?? ""
       });
 
       // only reveal word to the current drawer
@@ -287,7 +288,8 @@ export function setupGameSocket(io: Server, socket: Socket) {
         io.to(gameId).emit("reveal_drawer", {
           roundNum: nextRoundNum,
           currDrawer: game.players[nextDrawerIndex].name,
-          wordLength: game.round.word?.length ?? 0,
+          // wordLength: game.round.word?.length ?? 0,
+          maskedWord: maskWord(game.round.word) ?? ""
         });
 
         // only reveal word to the current drawer
@@ -491,4 +493,11 @@ export function setupGameSocket(io: Server, socket: Socket) {
     // free up some memory
     games.delete(game.id);
   };
+
+  const maskWord = (word: string | null) => {
+    if (word === null) {
+      return "";
+    }
+    return word.split("").map((ch)=>(ch === " " ? " " : "_"));
+  }
 }
