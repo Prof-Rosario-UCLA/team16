@@ -5,8 +5,10 @@ import { memo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
 // import { DrawingLineWasm } from "@/components/DrawingLineWasm";
-import { DrawingLine } from "@/components/DrawingLine";
-import playSound from "@/utils/playSound"
+import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
+import playSound from "@/utils/playSound";
+import { useAspectRatio } from "@/utils/useAspectRatio";
+
 // import { pointsToPath } from "@/components/DrawingLine";
 // const USE_WASM = false;
 const Line = DrawingLine;
@@ -96,6 +98,27 @@ export default function DrawArea({
       y: Math.round(svgPoint.y * 100) / 100,
     };
   };
+  const getTouchSvgCoords = (
+    e: TouchEvent | React.TouchEvent,
+    useChangedTouches = false
+  ) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+
+    const touches = useChangedTouches ? e.changedTouches : e.touches;
+    const touch = touches[0];
+    if (!touch) return { x: 0, y: 0 };
+
+    const pt = svg.createSVGPoint();
+    pt.x = touch.clientX;
+    pt.y = touch.clientY;
+
+    const svgPoint = pt.matrixTransform(svg.getScreenCTM()?.inverse());
+    return {
+      x: Math.round(svgPoint.x * 100) / 100,
+      y: Math.round(svgPoint.y * 100) / 100,
+    };
+  };
 
   useEffect(() => {
     setLocalLines((prevLines) => {
@@ -111,37 +134,6 @@ export default function DrawArea({
     setLocalLines([]);
     setIsDrawing(false);
   }, [clearLocalTrigger]);
-
-  // const audioRef = useRef<HTMLAudioElement>(new Audio("/media/drawing.mp3")); 
-  // const isPlayingRef = useRef(false);
-
-  // useEffect(() => {
-  //   const audio = audioRef.current;
-  //   audio.preload = "auto";
-
-  //   const onEnded = () => {
-  //     if (isPlayingRef.current) {
-  //       audio.currentTime = 0;
-  //       audio.play().catch(() => {});
-  //     }
-  //   };
-  //   audio.addEventListener("ended", onEnded);
-  //   audioRef.current = audio;
-
-  //   const onMouseUpWindow = () => {
-  //     if (isPlayingRef.current) {
-  //       isPlayingRef.current = false;
-  //       audio.pause();
-  //       audio.currentTime = 0;
-  //     }
-  //   };
-  //   window.addEventListener("mouseup", onMouseUpWindow);
-
-  //   return () => {
-  //     audio.removeEventListener("ended", onEnded);
-  //     audio.pause();
-  //   };
-  // }, []);
 
   const handleMouseDown = (mouseEvent: React.MouseEvent) => {
     if (isCurrDrawer) {
@@ -160,64 +152,56 @@ export default function DrawArea({
       setLocalLines((prevLines) => [...prevLines, newLine]);
       setIsDrawing(true);
       onLineStart?.(newLine);
-
-      // // play audio from begining
-      // const audio = audioRef.current!;
-      // isPlayingRef.current = true;
-      // audio.currentTime = 0;
-      // audio.play().catch(() => {});
     }
   };
 
   useEffect(() => {
     let pending = false;
     const handleMouseMove = (mouseEvent: MouseEvent) => {
-      if (!isDrawing) {
+      if (!isDrawing || pending) {
         return;
       }
 
-      if (!pending) {
-        pending = true;
-        const point = getSvgCoords(mouseEvent);
+      pending = true;
+      const point = getSvgCoords(mouseEvent);
 
-        // throttles path updates to at most once per frame
-        // at least, that's the intention
-        requestAnimationFrame(() => {
-          setLocalLines((prevLines) => {
-            if (prevLines.length === 0) return prevLines;
+      // throttles path updates to at most once per frame
+      // at least, that's the intention
+      requestAnimationFrame(() => {
+        setLocalLines((prevLines) => {
+          if (prevLines.length === 0) return prevLines;
 
-            const lastLine = prevLines[prevLines.length - 1];
-            const last = lastLine.points[lastLine.points.length - 1];
-            const dx = point.x - last.x;
-            const dy = point.y - last.y;
-            const dist2 = dx * dx + dy * dy;
+          const lastLine = prevLines[prevLines.length - 1];
+          const last = lastLine.points[lastLine.points.length - 1];
+          const dx = point.x - last.x;
+          const dy = point.y - last.y;
+          const dist2 = dx * dx + dy * dy;
 
-            if (dist2 < 1) return prevLines;
+          if (dist2 < 1) return prevLines;
 
-            const k = 0.25;
-            const smoothed = {
-              x: last.x * (1 - k) + point.x * k,
-              y: last.y * (1 - k) + point.y * k,
-            };
+          const k = 0.25;
+          const smoothed = {
+            x: last.x * (1 - k) + point.x * k,
+            y: last.y * (1 - k) + point.y * k,
+          };
 
-            const updatedLine = {
-              ...lastLine,
-              points: [...lastLine.points, smoothed],
-            };
+          const updatedLine = {
+            ...lastLine,
+            points: [...lastLine.points, smoothed],
+          };
 
-            const newLines = [
-              ...prevLines.slice(0, prevLines.length - 1),
-              updatedLine,
-            ];
+          const newLines = [
+            ...prevLines.slice(0, prevLines.length - 1),
+            updatedLine,
+          ];
 
-            onLineUpdate?.(updatedLine);
+          onLineUpdate?.(updatedLine);
 
-            return newLines;
-          });
-
-          pending = false;
+          return newLines;
         });
-      }
+
+        pending = false;
+      });
     };
 
     const handleMouseUp = (mouseEvent: MouseEvent) => {
@@ -236,52 +220,149 @@ export default function DrawArea({
     };
   }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const point = getTouchSvgCoords(e);
+    const newLine: Line = {
+      points: [point],
+      color: actualStrokeColor,
+      width: strokeWidth,
+      id: generateId(),
+    };
+
+    setLocalLines((prevLines) => [...prevLines, newLine]);
+    setIsDrawing(true);
+    onLineStart?.(newLine);
+  };
+
+  useEffect(() => {
+    let pending = false;
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDrawing || pending) {
+        return;
+      }
+
+      pending = true;
+      const point = getTouchSvgCoords(e);
+
+      // throttles path updates to at most once per frame
+      // at least, that's the intention
+      requestAnimationFrame(() => {
+        setLocalLines((prevLines) => {
+          if (prevLines.length === 0) return prevLines;
+
+          const lastLine = prevLines[prevLines.length - 1];
+          const last = lastLine.points[lastLine.points.length - 1];
+          const dx = point.x - last.x;
+          const dy = point.y - last.y;
+          const dist2 = dx * dx + dy * dy;
+
+          if (dist2 < 1) return prevLines;
+
+          const k = 0.25;
+          const smoothed = {
+            x: last.x * (1 - k) + point.x * k,
+            y: last.y * (1 - k) + point.y * k,
+          };
+
+          const updatedLine = {
+            ...lastLine,
+            points: [...lastLine.points, smoothed],
+          };
+
+          const newLines = [
+            ...prevLines.slice(0, prevLines.length - 1),
+            updatedLine,
+          ];
+
+          onLineUpdate?.(updatedLine);
+
+          return newLines;
+        });
+
+        pending = false;
+      });
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const point = getTouchSvgCoords(e, true); // use changedTouches
+      if (!point) return;
+
+      if (isDrawing) {
+        const currentLine = localLines[localLines.length - 1];
+        if (currentLine) {
+          const updatedLine = {
+            ...currentLine,
+            points: [...currentLine.points, point],
+          };
+          onLineEnd?.(updatedLine);
+        }
+      }
+
+      setIsDrawing(false);
+    };
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isDrawing, localLines, onLineEnd, onLineUpdate]);
+
+  const { containerRef, width, height } = useAspectRatio();
+
   return (
-    <div className="flex flex-col items-center justify-center relative w-full">
-  {/* Canvas container */}
-  <div className="nes-container w-full h-full max-w-[800px] max-h-[530px] aspect-[800/530] relative" style={{ padding: 0 }}>
-    <svg
-      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-      ref={svgRef}
-      onMouseDown={handleMouseDown}
-      preserveAspectRatio="xMidYMid meet"
-      width="100%"
-      height="100%"
-      className="bg-white"
-    >
-      {globalLines.concat(localLines).map((line) => (
-        <Line key={line.id} line={line} />
-      ))}
-    </svg>
+    <div ref={containerRef} className="w-full h-full relative">
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{ width, height }}
+      >
+        {/* Canvas container */}
+        <div className="nes-container size-full relative !p-0">
+          <svg
+            viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+            ref={svgRef}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            preserveAspectRatio="xMidYMid meet"
+            width="100%"
+            height="100%"
+            className="bg-white"
+          >
+            {globalLines.concat(localLines).map((line) => (
+              <Line key={line.id} line={line} />
+            ))}
+          </svg>
 
-    {isCurrDrawer ? (
-      <DrawAreaControls
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        erase={erase}
-        setStrokeColor={setStrokeColor}
-        setStrokeWidth={setStrokeWidth}
-        setErase={setErase}
-        clear={() => {
-          setLocalLines([]);
-          onClear?.();
-        }}
-        playSound={playSound}
-      />
-    ) : null}
-  </div>
-
-  {/* <div className="mt-2 self-end text-xs">
-    <button
-      className="nes-btn is-success"
-      onClick={() => exportDrawing(globalLines.concat(localLines))}
-    >
-      Download as PNG
-    </button>
-  </div> */}
-</div>
-
-
+          {isCurrDrawer ? (
+            <DrawAreaControls
+              strokeColor={strokeColor}
+              strokeWidth={strokeWidth}
+              erase={erase}
+              setStrokeColor={setStrokeColor}
+              setStrokeWidth={setStrokeWidth}
+              setErase={setErase}
+              clear={() => {
+                setLocalLines([]);
+                onClear?.();
+              }}
+              playSound={playSound}
+            />
+          ) : null}
+        </div>
+        <button
+          className="absolute bottom-1 left-1 p-2"
+          onClick={() => exportDrawing(globalLines.concat(localLines))}
+        >
+          <img
+            src="/icons/download-icon.png"
+            alt="Download"
+            className="md:size-8 size-6"
+            aria-label="Download drawing"
+          />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -305,18 +386,19 @@ const DrawAreaControls = memo(
     setStrokeWidth,
     setErase,
     clear,
-    playSound
+    playSound,
   }: DrawAreaControlsProps) => (
     <>
       {/* color palette */}
-      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4">
+
+      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4 max-h-7/8  flex-wrap">
         {colorPalette.map((color) => (
           <button
+            aria-label={`Select color ${color}`}
             key={color}
-            className={`border-4 transition-all 
-              ${color === strokeColor ? "w-4.5 h-4.5" : "w-5.5 h-5.5"}
-              ${color === strokeColor ? "1x:w-6 1x:h-6" : "1x:w-8 1x:h-8"}
-            `}
+            className={`${
+              color === strokeColor ? "border-5" : "border-3"
+            } transition-all size-6`}
             style={{ backgroundColor: color }}
             onClick={() => {
               setStrokeColor(color);
@@ -331,10 +413,11 @@ const DrawAreaControls = memo(
       <div className="flex flex-col absolute top-0 right-0 p-4 gap-2">
         <button
           onClick={() => {
-            setErase(false)
+            setErase(false);
             playSound("click");
           }}
-          className={`size-8 ${erase ? "opacity-20" : ""}`}
+          aria-label="Select brush tool"
+          className={`md:size-8 size-6 ${erase ? "opacity-20" : ""}`}
         >
           <img src="/brush.png" alt="Brush" />
         </button>
@@ -343,7 +426,8 @@ const DrawAreaControls = memo(
             setErase(true);
             playSound("click");
           }}
-          className={`size-8 ${!erase ? "opacity-20" : ""}`}
+          className={`md:size-8 size-6 ${!erase ? "opacity-20" : ""}`}
+          aria-label="Select eraser tool"
         >
           <img src="/eraser.png" alt="Eraser" />
         </button>
@@ -354,8 +438,9 @@ const DrawAreaControls = memo(
         {brushSizes.map((size, i) => (
           <button
             key={size}
+            aria-label={`Select brush size ${size}px`}
             onClick={() => {
-              setStrokeWidth(size)
+              setStrokeWidth(size);
               playSound("click");
             }}
             className={`flex items-center justify-center py-2 ${
@@ -376,42 +461,46 @@ const DrawAreaControls = memo(
       </div>
 
       {/* clear */}
-      <button className="absolute bottom-0 right-0 p-2" onClick={() => {
+      <button
+        className="absolute bottom-0 right-0 p-2"
+        onClick={() => {
           clear();
           playSound("click");
-        }}>
-        <img src="/trash.png" alt="Clear" className="size-8" />
+        }}
+        aria-label="Clear drawing"
+      >
+        <img src="/trash.png" alt="Clear" className="md:size-8 size-6" />
       </button>
     </>
   )
 );
 DrawAreaControls.displayName = "DrawAreaControls";
 
-// const exportDrawing = (lines: Line[]) => {
-//   const scale = 3;
+const exportDrawing = (lines: Line[]) => {
+  const scale = 3;
 
-//   const canvas = document.createElement("canvas");
-//   canvas.width = VIEWBOX_WIDTH * scale;
-//   canvas.height = VIEWBOX_HEIGHT * scale;
-//   const ctx = canvas.getContext("2d");
-//   if (!ctx) return;
-//   ctx.fillStyle = "white";
-//   ctx.fillRect(0, 0, canvas.width, canvas.height);
-//   ctx.scale(scale, scale); // scale so we're still in the same coordinate system
+  const canvas = document.createElement("canvas");
+  canvas.width = VIEWBOX_WIDTH * scale;
+  canvas.height = VIEWBOX_HEIGHT * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(scale, scale); // scale so we're still in the same coordinate system
 
-//   ctx.lineCap = "round";
-//   lines.forEach((line) => {
-//     ctx.strokeStyle = line.color;
-//     ctx.lineWidth = line.width;
-//     ctx.beginPath();
-//     const path = new Path2D();
-//     path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
-//     ctx.stroke(path);
-//   });
-//   const img = new Image();
-//   img.src = canvas.toDataURL("image/png");
-//   const link = document.createElement("a");
-//   link.href = img.src;
-//   link.download = "drawing.png";
-//   link.click();
-// };
+  ctx.lineCap = "round";
+  lines.forEach((line) => {
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = line.width;
+    ctx.beginPath();
+    const path = new Path2D();
+    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+    ctx.stroke(path);
+  });
+  const img = new Image();
+  img.src = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = img.src;
+  link.download = "drawing.png";
+  link.click();
+};

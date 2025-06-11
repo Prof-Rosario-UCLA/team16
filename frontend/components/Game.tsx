@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import playSound from "@/utils/playSound";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil } from "@fortawesome/free-solid-svg-icons";
+import GameBar from "@/components/GameBar";
+import GameLeaderboard from "@/components/GameLeaderboard";
 
 type User = {
   username: string;
 };
 
-type Player = {
+export type Player = {
   name: string;
   points: number;
   isDrawing: boolean;
@@ -38,7 +38,7 @@ export default function Game({ gameId }: { gameId: string }) {
   const [roundNum, setRoundNum] = useState(0);
   const [currWord, setCurrWord] = useState(""); // only defined for current drawer
   // const [wordLength, setWordLength] = useState(0);
-  const [maskedWord, setMaskedWord] = useState("");
+  const [maskedWord, setMaskedWord] = useState("______");
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currDrawer, setCurrDrawer] = useState("");
@@ -118,7 +118,6 @@ export default function Game({ gameId }: { gameId: string }) {
       setTurnStarting(true); // show the turn starting screen
       setRoundNum(roundNum);
       setCurrDrawer(currDrawer);
-      // setWordLength(wordLength);
       setMaskedWord(maskedWord);
       setTurnActive(false);
       setIsGuessing(true);
@@ -191,7 +190,7 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
   return (
-    <div className="relative flex flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
+    <div className="relative flex flex-col flex-1 items-center h-screen w-screen bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
       {turnStarting && (
         <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
@@ -253,56 +252,18 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Top bar */}
-      <div className="flex flex-row items-center w-full mt-5 justify-center z-10">
-        {!gameStarted ? (
-          players.length >= 2 ? (
-            <button
-              className="nes-btn is-success !px-1 !py-1 !text-sm"
-              onClick={startGame}
-            >
-              Start Game
-            </button>
-          ) : (
-            <div className="text-center text-sm sm:text-lg font-bold">
-              Waiting for players...
-            </div>
-          )
-        ) : (
-          <div className="flex flex-col items-center w-full">
-            <div className="flex flex-row items-center justify-between w-[99%] sm:gap-0 gap-2">
-              <div className="text-center text-sm sm:text-lg font-bold">
-                Round: {roundNum}
-                <div className="nes-text is-error">Time Left {timeLeft}s</div>
-                <div className="mt-4">
-                  {user?.username !== currDrawer && isGuessing && (
-                    // <div className="text-lg mt-1">{"_".repeat(wordLength)}</div>
-                    <div className="text-lg mt-1">{maskedWord}</div>
-                  )}
-                  {user?.username !== currDrawer && !isGuessing && (
-                    <div className="text-lg mt-1">{currWord}</div>
-                  )}
-                  {user?.username === currDrawer && (
-                    <>
-                      <span className="text-sm mt-1">My word: </span>
-                      <span className="text-sm nes-text is-primary">
-                        {" "}
-                        {currWord}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="nes-btn is-warning !px-1 !py-1 !text-xs !leading-none"
-                onClick={endGame}
-              >
-                End Game
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <GameBar
+        gameStarted={gameStarted}
+        players={players}
+        startGame={startGame}
+        endGame={endGame}
+        roundNum={roundNum}
+        timeLeft={timeLeft}
+        isGuessing={isGuessing}
+        currWord={currWord}
+        maskedWord={maskedWord}
+        isCurrDrawer={user?.username === currDrawer}
+      />
 
       {gameEnded && (
         <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
@@ -332,40 +293,14 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Main content */}
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 w-full h-[100vh] px-2 overflow-hidden">
-        <div className="flex flex-row lg:flex-col flex-shrink-0 w-full lg:w-60 h-20 lg:h-full max-h-full lg:max-h-[calc(90vh-2rem)] nes-container gap-2 text-xs bg-white overflow-y-auto">
-          {players.map((player, index) => (
-            <div
-              key={index}
-              className="flex lg:flex-col flex-row justify-start items-center lg:items-start nes-container gap-1"
-            >
-              <div className="nes-text is-primary text-xxs lg:text-xs sm:mr-2">
-                {player.name}
-              </div>
-              <div>
-                <span className="nes-text is-error text-xxs lg:text-sm">
-                  {player.points}
-                </span>
-                <span className="hidden sm:inline nes-text is-error text-xxs lg:text-sm">
-                  &nbsp;points
-                </span>
-                {currDrawer === player.name && (
-                  <FontAwesomeIcon
-                    icon={faPencil}
-                    transform={{ y: -2 }}
-                    className="ml-2 align-middle"
-                  />
-                )}
-              </div>
-            </div>
-          ))}
+      <div className="grid grid-cols-2 grid-rows-2 gap-4 w-full flex-1 h-0 lg:flex lg:justify-between p-4">
+        <div className="lg:order-1 order-2 flex-1 ">
+          <GameLeaderboard players={players} currDrawer={currDrawer} />
         </div>
-
-        <div className="flex lg:w-full lg:h-full max-width-[500px] items-center justify-center">
+        <div className="lg:order-2 order-1 col-span-2 flex-4">
           <DrawAreaSockets user={username} gameStarted={gameStarted} />
         </div>
-
-        <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
+        <div className="order-3 h-full flex-1">
           <GameChat />
         </div>
       </div>
