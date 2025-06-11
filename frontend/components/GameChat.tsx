@@ -73,11 +73,11 @@ export default function GameChat() {
                     <span className="break-words">{message.message}</span>
                   </span>
                 ) : (
-                  <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md inline-block">
+                  <span className="bg-[#92cc41] text-white px-2 py-1 rounded-md block max-w-full inline-block">
                     {message.user && (
                       <span className="nes-text">{`${message.user} `}</span>
                     )}
-                    <span>{message.message}</span>
+                    <span className="break-words text-wrap">{message.message}</span>
                   </span>
                 )}
               </div>
