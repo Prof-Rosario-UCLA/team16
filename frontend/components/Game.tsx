@@ -190,7 +190,7 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
   return (
-    <div className="relative flex flex-col flex-1 items-center h-[100vh] w-[100vw] bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
+    <div className="relative flex flex-col flex-1 items-center h-screen w-screen bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
       {turnStarting && (
         <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
@@ -293,14 +293,14 @@ export default function Game({ gameId }: { gameId: string }) {
       )}
 
       {/* Main content */}
-      <div className="grid grid-cols-2 grid-rows-2 gap-4 w-screen h-screen lg:flex lg:justify-between p-4">
-        <div className="lg:order-1 order-2 ">
+      <div className="grid grid-cols-2 grid-rows-2 gap-4 w-full flex-1 h-0 lg:flex lg:justify-between p-4">
+        <div className="lg:order-1 order-2 flex-1 ">
           <GameLeaderboard players={players} currDrawer={currDrawer} />
         </div>
-        <div className="lg:order-2 order-1 col-span-2 flex-1">
+        <div className="lg:order-2 order-1 col-span-2 flex-4">
           <DrawAreaSockets user={username} gameStarted={gameStarted} />
         </div>
-        <div className="order-3">
+        <div className="order-3 h-full flex-1">
           <GameChat />
         </div>
       </div>

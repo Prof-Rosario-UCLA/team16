@@ -94,7 +94,7 @@ export default function GameChat() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs lg:max-w-72">
+    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs ">
       <div className="!p-4 flex-grow overflow-y-auto flex flex-col-reverse gap-2 nes-container bg-white">
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>

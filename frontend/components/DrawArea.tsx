@@ -209,12 +209,8 @@ export default function DrawArea({
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{ width, height }}
       >
-        {" "}
         {/* Canvas container */}
-        <div
-          className="nes-container size-full relative"
-          style={{ padding: 0 }}
-        >
+        <div className="nes-container size-full relative !p-0">
           <svg
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
             ref={svgRef}
@@ -252,7 +248,8 @@ export default function DrawArea({
           <img
             src="/icons/download-icon.png"
             alt="Download"
-            className="size-8"
+            className="md:size-8 size-6"
+            aria-label="Download drawing"
           />
         </button>
       </div>
@@ -284,14 +281,15 @@ const DrawAreaControls = memo(
   }: DrawAreaControlsProps) => (
     <>
       {/* color palette */}
-      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4">
+
+      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4 max-h-7/8  flex-wrap">
         {colorPalette.map((color) => (
           <button
+            aria-label={`Select color ${color}`}
             key={color}
-            className={`border-4 transition-all 
-              ${color === strokeColor ? "w-4.5 h-4.5" : "w-5.5 h-5.5"}
-              ${color === strokeColor ? "1x:w-6 1x:h-6" : "1x:w-8 1x:h-8"}
-            `}
+            className={`${
+              color === strokeColor ? "border-5" : "border-3"
+            } transition-all size-6`}
             style={{ backgroundColor: color }}
             onClick={() => {
               setStrokeColor(color);
@@ -309,7 +307,8 @@ const DrawAreaControls = memo(
             setErase(false);
             playSound("click");
           }}
-          className={`size-8 ${erase ? "opacity-20" : ""}`}
+          aria-label="Select brush tool"
+          className={`md:size-8 size-6 ${erase ? "opacity-20" : ""}`}
         >
           <img src="/brush.png" alt="Brush" />
         </button>
@@ -318,7 +317,8 @@ const DrawAreaControls = memo(
             setErase(true);
             playSound("click");
           }}
-          className={`size-8 ${!erase ? "opacity-20" : ""}`}
+          className={`md:size-8 size-6 ${!erase ? "opacity-20" : ""}`}
+          aria-label="Select eraser tool"
         >
           <img src="/eraser.png" alt="Eraser" />
         </button>
@@ -329,6 +329,7 @@ const DrawAreaControls = memo(
         {brushSizes.map((size, i) => (
           <button
             key={size}
+            aria-label={`Select brush size ${size}px`}
             onClick={() => {
               setStrokeWidth(size);
               playSound("click");
@@ -357,8 +358,9 @@ const DrawAreaControls = memo(
           clear();
           playSound("click");
         }}
+        aria-label="Clear drawing"
       >
-        <img src="/trash.png" alt="Clear" className="size-8" />
+        <img src="/trash.png" alt="Clear" className="md:size-8 size-6" />
       </button>
     </>
   )

@@ -9,13 +9,18 @@ interface GameLeaderboardProps {
 
 const GameLeaderboard = ({ players, currDrawer }: GameLeaderboardProps) => {
   return (
-    <div className="flex flex-col nes-container gap-2 text-xs bg-white overflow-y-auto size-full lg:max-w-72 max-h-full min-h-0">
+    <div className="flex flex-col nes-container gap-2 text-xs bg-white overflow-y-auto size-full lg:max-w-72 max-h-full min-h-0 lg:min-w-72">
       {players.map((player, index) => (
         <div
           key={index}
           className="flex flex-col justify-start items-start nes-container gap-1"
         >
-          <div className="nes-text is-primary text-xs mr-2">{player.name}</div>
+          <div
+            className="nes-text is-primary text-xs mr-2 truncate max-w-full"
+            title={player.name}
+          >
+            {player.name}
+          </div>
           <div>
             <span className="nes-text is-error text-sm">{player.points}</span>
             <span className="hidden sm:inline nes-text is-error text-sm">
