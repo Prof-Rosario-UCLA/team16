@@ -191,69 +191,88 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
   return (
-    <div className="relative flex flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
+    <main className="main-flex relative flex-col flex-1 items-center p-8 h-[100vh] w-[100vw] gap-4 bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
       {turnStarting && (
-        <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 w-100 rounded-xl text-center shadow-lg">
-            {user?.username !== currDrawer && (
-              <div className="text-xl font-bold">
-                {currDrawer} is getting ready to draw...
-              </div>
-            )}
+        <section 
+          className="absolute inset-0 bg-opacity-40 backdrop-blur-sm section-flex items-center justify-center z-50 border-black" 
+          aria-modal="true" 
+          role="dialog" 
+          aria-labelledby="turn-starting-title"
+        >
+          <article className="nes-container is-rounded bg-white p-8 w-full max-w-md rounded-xl text-center shadow-lg">
+            <header>
+              {user?.username !== currDrawer && (
+                <h2 id="turn-starting-title" className="text-xl font-bold">
+                  {currDrawer} is getting ready to draw...
+                </h2>
+              )}
+              {user?.username === currDrawer && (
+                <h2 id="turn-starting-title" className="text-2xl font-bold">
+                  You&apos;re up!
+                </h2>
+              )}
+            </header>
+
             {user?.username === currDrawer && (
-              <>
-                <div className="text-2xl font-bold">You&apos;re up!</div>
-                <div className="text-xl mt-2 italic">Your word: {currWord}</div>
-              </>
+              <main>
+                <p className="text-xl mt-2 italic">Your word: {currWord}</p>
+              </main>
             )}
-          </div>
-        </div>
+          </article>
+        </section>
       )}
+
       {turnEnding && (
-        <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
-            <div className="mb-5">
-              <h1 className="text-lg nes-text">The word was... </h1>
-              <p className="text-lg nes-text is-success uppercase">
-                {currWord}
-              </p>
-            </div>
-            <ul className="space-y-2">
-              {players
-                .sort((a, b) => b.points - a.points)
-                .map((player, idx) => {
-                  let diff = pointDifferences[player.name] ?? 0;
-                  if (player.name === currDrawer) {
-                    diff = drawerScore;
-                  }
-                  return (
-                    <li
-                      key={idx}
-                      className="flex justify-between px-4 items-center"
-                    >
-                      <span>
-                        <span className="mr-2">{idx + 1}.</span>
-                        <span className="nes-text is-primary">
-                          {player.name}
+        <section
+          className="section-flex absolute inset-0 bg-opacity-60 backdrop-blur-sm items-center justify-center z-50 border-black"
+          aria-labelledby="turn-ending-heading"
+          role="dialog"
+          aria-modal="true"
+        >
+          <article className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
+            <header className="mb-5">
+              <h1 id="turn-ending-heading" className="text-lg nes-text">
+                The word was...
+              </h1>
+              <p className="text-lg nes-text is-success uppercase">{currWord}</p>
+            </header>
+
+            <nav aria-label="Player scores">
+              <ol className="space-y-2">
+                {players
+                  .sort((a, b) => b.points - a.points)
+                  .map((player, idx) => {
+                    const diff = pointDifferences[player.name] ?? 0;
+                    return (
+                      <li
+                        key={idx}
+                        className="flex justify-between px-4 items-center"
+                        aria-posinset={idx + 1}
+                        aria-setsize={players.length}
+                      >
+                        <span>
+                          <span className="mr-2">{idx + 1}.</span>
+                          <span className="nes-text is-primary">{player.name}</span>
+                          <span className="nes-text is-success"> +{diff}</span>
                         </span>
-                        <span className="nes-text is-success"> +{diff}</span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <span className="nes-text is-error">
-                          {player.points} pts
+                        <span className="flex items-center gap-2">
+                          <span className="nes-text is-error">{player.points} pts</span>
                         </span>
-                      </span>
-                    </li>
-                  );
-                })}
-            </ul>
-          </div>
-        </div>
+                      </li>
+                    );
+                  })}
+              </ol>
+            </nav>
+          </article>
+        </section>
       )}
 
       {/* Top bar */}
-      <div className="flex flex-row items-center w-full mt-5 justify-center z-10">
+      <section 
+        className="section-flex flex-row items-center w-full mt-5 justify-center z-10" 
+        aria-label="Game controls and status"
+      >
         {!gameStarted ? (
           players.length >= 2 ? (
             <button
@@ -263,9 +282,9 @@ export default function Game({ gameId }: { gameId: string }) {
               Start Game
             </button>
           ) : (
-            <div className="text-center text-sm sm:text-lg font-bold">
+            <p className="text-center text-sm sm:text-lg font-bold">
               Waiting for players...
-            </div>
+            </p>
           )
         ) : (
           <div className="flex flex-col items-center w-full">
@@ -302,13 +321,15 @@ export default function Game({ gameId }: { gameId: string }) {
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {gameEnded && (
-        <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
-            <h2 className="text-2xl font-bold mb-4">Game Over</h2>
-            <p className="text-lg mb-4">Final Scores:</p>
+        <section className="section-flex absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
+          <section className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
+            <header>
+              <h2 className="text-2xl font-bold mb-4">Game Over</h2>
+              <p className="text-lg mb-4">Final Scores:</p>
+            </header>
             <ul className="space-y-2">
               {finalPlayers
                 .sort((a, b) => b.points - a.points)
@@ -324,15 +345,17 @@ export default function Game({ gameId }: { gameId: string }) {
                   </li>
                 ))}
             </ul>
-            <button className="nes-btn mt-6" onClick={() => router.push("/")}>
-              Return to Home
-            </button>
-          </div>
-        </div>
+            <footer>
+              <button className="nes-btn mt-6" onClick={() => router.push("/")}>
+                Return to Home
+              </button>
+            </footer>
+          </section>
+        </section>
       )}
 
       {/* Main content */}
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 w-full h-[100vh] px-2 overflow-hidden">
+      <section className="section-flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 w-full h-[100vh] px-2 overflow-hidden">
         <div className="flex flex-row lg:flex-col flex-shrink-0 w-full lg:w-60 h-20 lg:h-full max-h-full lg:max-h-[calc(90vh-2rem)] nes-container gap-2 text-xs bg-white overflow-y-auto">
           {players.map((player, index) => (
             <div
@@ -364,11 +387,10 @@ export default function Game({ gameId }: { gameId: string }) {
         <div className="flex lg:w-full lg:h-full max-width-[500px] items-center justify-center">
           <DrawAreaSockets user={username} gameStarted={gameStarted} />
         </div>
-
-        <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
-          <GameChat />
-        </div>
-      </div>
-    </div>
+          <div className="flex flex-col flex-shrink-0 w-full lg:w-70 h-40 lg:h-full overflow-hidden">
+            <GameChat />
+          </div>
+      </section>
+    </main>
   );
 }
