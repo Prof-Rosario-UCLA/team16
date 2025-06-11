@@ -35,31 +35,34 @@ const Leaderboard = () => {
   }, [username]);
 
   return (
-    <div className="max-w-4xl mt-16 flex flex-col mx-auto px-8 gap-4">
-      <h1 className="nes-text is-primary mb-8 text-center text-2xl md:text-4xl">
+    <section className="section-flex max-w-4xl max-h-screen mt-8 flex-col mx-auto px-8 gap-6 overflow-y-auto">
+      <h1 className="hidden sm:block nes-text is-primary mb-8 text-center text-2xl md:text-4xl">
         HIGH SCORES
       </h1>
-      <div className="flex justify-center gap-4 mb-4">
+      <section className="section-flex flex flex-col [@media(min-width:400px)]:flex-row justify-center gap-4 mb-4">
         <button
           className={`nes-btn ${sortKey === "wins" ? "is-warning" : ""}`}
           onClick={() => setSortKey("wins")}
+          aria-label="Sort by Wins"
         >
           Wins
         </button>
         <button
           className={`nes-btn ${sortKey === "points" ? "is-warning" : ""}`}
           onClick={() => setSortKey("points")}
+          aria-label="Sort by Points"
         >
           Points
         </button>
         <button
           className={`nes-btn ${sortKey === "games" ? "is-warning" : ""}`}
           onClick={() => setSortKey("games")}
+          aria-label="Sort by Games"
         >
           Games
         </button>
-      </div>
-      <div className="!px-6 nes-container with-title bg-white">
+      </section>
+      <section className="!px-6 nes-container with-title bg-white" aria-label="Leaderboard">
         <p className="title">LEADERBOARD</p>
 
         <LeaderboardList
@@ -67,8 +70,8 @@ const Leaderboard = () => {
           sortKey={sortKey}
           username={username}
         />
-      </div>
-      <div className="!px-6 nes-container with-title bg-white">
+      </section>
+      <section className="!px-6 nes-container with-title bg-white" aria-label="Your Stats">
         <p className="title">YOU</p>
         {userStats && username && (
           <LeaderboardEntryCard
@@ -78,16 +81,16 @@ const Leaderboard = () => {
             highlight
           />
         )}
-      </div>
+      </section>
       {leaderboardData && (
-        <div className="text-center text-gray-500 text-sm mt-4">
-          <span>
+        <section className="text-center text-gray-500 text-sm">
+          <span className="hidden [@media(min-width:400px)]:block" aria-label="Next refresh time">
             Next refresh at:
             {new Date(leaderboardData.expires).toLocaleTimeString()}
           </span>
-        </div>
+        </section>
       )}
-    </div>
+    </section>
   );
 };
 
@@ -104,7 +107,7 @@ const LeaderboardList = ({
   let prevStat = 0; // initial val doesn't matter
   let displayRank = 1;
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col flex-grow overflow-y-auto max-h-[40vh] h-[calc(100vh-500px)] min-h-0">
       {leaderboardData?.value?.[sortKey]?.map((data) => {
         const currentStat = data.stats[sortKey];
         if (currentStat !== prevStat) {
@@ -140,31 +143,32 @@ const LeaderboardEntryCard = ({
   highlight?: boolean;
 }) => {
   return (
-    <div className="flex justify-between items-start border-b border-gray-300 last:border-b-0 flex-col md:flex-row p-2">
-      <div className="flex items-center gap-8">
-        <span className="nes-text text-yellow-600 w-8 ">{label}</span>
-        <span
-          className={`nes-text ${highlight ? "is-primary" : "text-gray-900"}`}
-        >
-          {username}
-        </span>
-      </div>
+<div className="flex flex-col md:flex-row justify-between items-start border-b border-gray-300 last:border-b-0 p-2 gap-2 md:gap-4 w-full">
+  <div className="flex md:flex-nowrap items-center gap-4 min-w-0">
+    <span className="nes-text text-yellow-600 w-8 shrink-0">{label}</span>
+    <span
+      className={`nes-text break-words ${highlight ? "is-primary" : "text-gray-900"}`}
+    >
+      &nbsp;{username}
+    </span>
+  </div>
 
-      <div className="flex items-center gap-6">
-        <div>
-          <span className="nes-text text-green-600">{stats.wins}</span>
-          <span className="text-gray-500 text-sm"> WINS</span>
-        </div>
-        <div>
-          <span className="nes-text text-green-600">{stats.points}</span>
-          <span className="text-gray-500 text-sm"> POINTS</span>
-        </div>
-        <div>
-          <span className="nes-text text-green-600">{stats.games}</span>
-          <span className="text-gray-500 text-sm"> GAMES</span>
-        </div>
-      </div>
+  <div className="flex flex-wrap justify-start md:justify-end gap-4 text-sm">
+    <div>
+      <span className="nes-text text-green-600">{stats.wins}</span>
+      <span className="text-gray-500"> WINS</span>
     </div>
+    <div>
+      <span className="nes-text text-green-600">{stats.points}</span>
+      <span className="text-gray-500"> POINTS</span>
+    </div>
+    <div>
+      <span className="nes-text text-green-600">{stats.games}</span>
+      <span className="text-gray-500"> GAMES</span>
+    </div>
+  </div>
+</div>
+
   );
 };
 
