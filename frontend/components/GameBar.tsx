@@ -11,6 +11,7 @@ interface GameBarProps {
   currWord: string;
   maskedWord: string;
   isCurrDrawer: boolean;
+  gameId: string;
 }
 
 const GameBar = ({
@@ -24,23 +25,28 @@ const GameBar = ({
   currWord,
   maskedWord,
   isCurrDrawer,
+  gameId,
 }: GameBarProps) => {
   return (
-    <div className="flex flex-row items-center w-full justify-center z-10 bg-white border-b-2 border-dashed border-black-500 p-4 h-20">
+    <div className="flex flex-row items-center w-full justify-center z-10 bg-white border-b-2 border-dashed border-black-500 p-2">
       {/* Game not started */}
-      {!gameStarted &&
-        (players.length >= 2 ? (
-          <button
-            className="nes-btn is-success !px-1 !py-1 !text-sm"
-            onClick={startGame}
-          >
-            Start Game
-          </button>
-        ) : (
-          <div className="text-center text-sm sm:text-lg font-bold">
-            Waiting for players...
+      {!gameStarted && (
+          <div className="flex flex-col gap-1 text-center w-[95%]  justify-center items-center text-sm sm:text-lg font-bold">
+            <div className="nes-text is-primary">Code: {gameId}</div> {/* always show gameId */}
+            {players.length >= 2 ? (
+              <button
+                className="nes-btn is-success !px-1 !py-1 !text-sm"
+                onClick={startGame}
+              >
+                Start Game
+              </button>
+            ) : (
+              <div className="flex text-center text-sm sm:text-lg font-bold">
+                Waiting for players...
+              </div>
+            )}
           </div>
-        ))}
+      )}
 
       {/* Game started */}
       {gameStarted && (

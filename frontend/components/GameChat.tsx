@@ -122,7 +122,7 @@ export default function GameChat() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-grow nes-input focus:outline-none bg-white"
+            className="flex-grow !p-1 nes-input focus:outline-none bg-white"
             placeholder="Take a guess!"
           />
           <button type="submit" className="nes-btn is-primary">

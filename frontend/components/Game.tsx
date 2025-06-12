@@ -263,6 +263,7 @@ export default function Game({ gameId }: { gameId: string }) {
         currWord={currWord}
         maskedWord={maskedWord}
         isCurrDrawer={user?.username === currDrawer}
+        gameId={gameId}
       />
 
       {gameEnded && (
