@@ -5,9 +5,10 @@ import { memo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { customAlphabet } from "nanoid";
 // import { DrawingLineWasm } from "@/components/DrawingLineWasm";
-import { DrawingLine, pointsToPath } from "@/components/DrawingLine";
+import { DrawingLine } from "@/components/DrawingLine";
 import playSound from "@/utils/playSound";
 import { useAspectRatio } from "@/utils/useAspectRatio";
+import { pointsToPathWasm } from "@/utils/pointsToPathWasm";
 
 // import { pointsToPath } from "@/components/DrawingLine";
 // const USE_WASM = false;
@@ -495,7 +496,7 @@ const exportDrawing = (lines: Line[]) => {
     ctx.lineWidth = line.width;
     ctx.beginPath();
     const path = new Path2D();
-    path.addPath(new Path2D(pointsToPath(line.points, 0.2)));
+    path.addPath(new Path2D(pointsToPathWasm(line.points, 0.2)));
     ctx.stroke(path);
   });
   const img = new Image();
