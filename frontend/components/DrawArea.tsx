@@ -392,7 +392,7 @@ const DrawAreaControls = memo(
     <>
       {/* color palette */}
 
-      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4 max-h-7/8  flex-wrap">
+      <div className="flex flex-col gap-2 absolute top-0 left-0 p-4 max-h-7/8 flex-wrap h-full pointer-none">
         {colorPalette.map((color) => (
           <button
             aria-label={`Select color ${color}`}
