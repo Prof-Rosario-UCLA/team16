@@ -190,29 +190,52 @@ export default function Game({ gameId }: { gameId: string }) {
   }, [endTime, gameStarted, currDrawer, socket, user?.username, turnActive]);
 
   return (
-    <div className="relative flex flex-col flex-1 items-center h-screen w-screen bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
+    <main className="main relative main-flex flex-col flex-1 items-center h-screen w-screen bg-blue-100 overflow-hidden pt-[var(--navbar-height)]">
       {/* Overlay */}
       {turnStarting && (
-        <div className="absolute inset-0 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 w-100 rounded-xl text-center shadow-lg">
-            {user?.username !== currDrawer && (
-              <div className="text-xl font-bold">
-                {currDrawer} is getting ready to draw...
-              </div>
-            )}
+        <section 
+          className="absolute inset-0 bg-opacity-40 backdrop-blur-sm section-flex items-center justify-center z-50 border-black" 
+          aria-modal="true" 
+          role="dialog" 
+          aria-labelledby="turn-starting-title"
+        >
+          <article 
+            className="nes-container is-rounded bg-white p-8 w-full max-w-md rounded-xl text-center shadow-lg" 
+            aria-label="Turn starting info"
+            role="document">
+            <header>
+              {user?.username !== currDrawer && (
+                <h2 id="turn-starting-title" className="text-xl font-bold">
+                  {currDrawer} is getting ready to draw...
+                </h2>
+              )}
+              {user?.username === currDrawer && (
+                <h2 id="turn-starting-title" className="text-2xl font-bold">
+                  You&apos;re up!
+                </h2>
+              )}
+            </header>
+
             {user?.username === currDrawer && (
-              <>
-                <div className="text-2xl font-bold">You&apos;re up!</div>
-                <div className="text-xl mt-2 italic">Your word: {currWord}</div>
-              </>
+              <main>
+                <p className="text-xl mt-2 italic">Your word: {currWord}</p>
+              </main>
             )}
-          </div>
-        </div>
+          </article>
+        </section>
       )}
       {turnEnding && (
-        <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
-            <div className="mb-5">
+        <section 
+          className="absolute inset-0 bg-opacity-60 backdrop-blur-sm section-flex items-center justify-center z-50 border-black"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="turn-ending-title"
+        >
+          <article 
+            className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full"
+            aria-label="Word and point reveal"
+          >
+            <div className="mb-5" aria-label="Word this round">
               <h1 className="text-lg nes-text">The word was... </h1>
               <p className="text-lg nes-text is-success uppercase">
                 {currWord}
@@ -230,6 +253,7 @@ export default function Game({ gameId }: { gameId: string }) {
                     <li
                       key={idx}
                       className="flex justify-between px-4 items-center"
+                      aria-label="Player scores this round"
                     >
                       <span>
                         <span className="mr-2">{idx + 1}.</span>
@@ -247,8 +271,8 @@ export default function Game({ gameId }: { gameId: string }) {
                   );
                 })}
             </ul>
-          </div>
-        </div>
+          </article>
+        </section>
       )}
 
       {/* Top bar */}
@@ -263,14 +287,24 @@ export default function Game({ gameId }: { gameId: string }) {
         currWord={currWord}
         maskedWord={maskedWord}
         isCurrDrawer={user?.username === currDrawer}
+        gameId={gameId}
       />
 
       {gameEnded && (
-        <div className="absolute inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 border-black">
-          <div className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full">
-            <h2 className="text-2xl font-bold mb-4">Game Over</h2>
-            <p className="text-lg mb-4">Final Scores:</p>
-            <ul className="space-y-2">
+        <section 
+          className="absolute inset-0 bg-opacity-60 backdrop-blur-sm section-flex items-center justify-center z-50 border-black"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="game-ended-title"
+        >
+          <div 
+            className="nes-container is-rounded bg-white p-8 rounded-xl text-center shadow-lg max-w-lg w-full"
+            aria-label="Game end screen"
+            role="document"
+          >
+            <h2 id="game-ended-title" className="text-2xl font-bold mb-4">Game Over</h2>
+            <p className="text-lg mb-4" aria-label="Final scores heading">Final Scores:</p>
+            <ul className="space-y-2" aria-label="Final player scores">
               {finalPlayers
                 .sort((a, b) => b.points - a.points)
                 .map((player, idx) => (
@@ -289,21 +323,21 @@ export default function Game({ gameId }: { gameId: string }) {
               Return to Home
             </button>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Main content */}
       <div className="grid grid-cols-2 grid-rows-2 gap-4 w-full flex-1 h-0 lg:flex lg:justify-between p-4">
-        <div className="lg:order-1 order-2 flex-1 ">
+        <section className="lg:order-1 order-2 flex-1" aria-label="Player standing">
           <GameLeaderboard players={players} currDrawer={currDrawer} />
-        </div>
-        <div className="lg:order-2 order-1 col-span-2 flex-4">
+        </section>
+        <section className="lg:order-2 order-1 col-span-2 flex-4" aria-label="Draw area">
           <DrawAreaSockets user={username} gameStarted={gameStarted} />
-        </div>
-        <div className="order-3 h-full flex-1">
+        </section>
+        <section className="order-3 h-full flex-1" aria-label="Chat box">
           <GameChat />
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

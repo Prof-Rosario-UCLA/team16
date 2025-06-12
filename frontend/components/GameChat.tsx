@@ -94,7 +94,7 @@ export default function GameChat() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs md:min-w-64">
+    <div className="flex flex-col gap-4 w-full max-h-full h-full text-xs md:min-w-64" aria-label="Chat box">
       <div className="!p-4 flex-grow overflow-y-auto flex flex-col-reverse gap-2 nes-container bg-white">
         {messages.length === 0 ? (
           <div className="text-center">No messages yet</div>
@@ -122,10 +122,10 @@ export default function GameChat() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-grow nes-input focus:outline-none bg-white"
+            className="flex-grow !p-1 nes-input focus:outline-none bg-white"
             placeholder="Take a guess!"
           />
-          <button type="submit" className="nes-btn is-primary">
+          <button type="submit" className="nes-btn is-primary" aria-label="Send">
             Send
           </button>
         </form>

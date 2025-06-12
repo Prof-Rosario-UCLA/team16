@@ -313,7 +313,7 @@ export default function DrawArea({
   const { containerRef, width, height } = useAspectRatio();
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div ref={containerRef} className="w-full h-full relative" aria-label="Draw area">
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{ width, height }}

@@ -9,7 +9,7 @@ interface GameLeaderboardProps {
 
 const GameLeaderboard = ({ players, currDrawer }: GameLeaderboardProps) => {
   return (
-    <div className="flex flex-col nes-container gap-2 text-xs bg-white overflow-y-auto size-full max-h-full min-h-0 lg:min-w-64">
+    <div className="flex flex-col nes-container gap-2 text-xs bg-white overflow-y-auto size-full max-h-full min-h-0 lg:min-w-64" aria-label="Player leaderboard">
       {players.map((player, index) => (
         <div
           key={index}

@@ -28,7 +28,7 @@ export default function Navbar() {
   }
 
   return (
-    <div className="absolute inset-x-0 top-0 z-50 h-[var(--navbar-height)] px-4 py-3 flex items-center justify-between bg-[var(--navbar-color)]">
+    <nav className="absolute inset-x-0 top-0 z-50 h-[var(--navbar-height)] px-4 py-3 !flex items-center justify-between bg-[var(--navbar-color)]">
       {/* Logo */}
       <Link
         href="/"
@@ -79,7 +79,7 @@ export default function Navbar() {
           </button>
         </div>
       )}
-    </div>
+    </nav>
   );
 
 }
