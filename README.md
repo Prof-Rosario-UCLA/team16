@@ -32,6 +32,28 @@ npm run dev
 > TODO
 
 ## API Endpoints
+All endpoints are accessible under `/api`.
+
+### Routes
+`POST /api/game` - generates a new game with a random gameId
+
+`GET /api/leaderboard` - fetches top 10 players based on wins, games, and points
+
+`POST /api/login` - takes in a username and password that registers a new user and saves them in the database
+
+`POST /api/login/session` - takes in a username and password, returning a JWT session token within a cookie if the login is successful
+
+`DELETE /api/login/session` - log outs user by clearing the session cookie
+
+`GET /api/test` - test route that returns a Test object
+
+`GET /api/user/me` - returns the current logged in user or `null` if nobody is logged in
+
+`GET /api/:username/stats` - returns the wins, point, and games for each user along with their placement in each category
+
+`GET /` - special route that we use to ping the backend and check for connectivity
+
+
 
 
 
