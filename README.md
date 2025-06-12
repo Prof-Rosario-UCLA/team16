@@ -29,6 +29,11 @@ npm run dev
 ```
 
 ### Production Deployment
+### Automated
+We have everything needed for deployment set up in the `k8s/` directory. To use this for yourself, you will need to create your own GKE instance, enable the proper APIs, and modify the `yaml` configs to fit your setup. The Google Artifact Registry URLs in `cloudbuild.yaml` will need to be changed, you will need your own domain for HTTPS, and you will need a Google Cloud Trigger tied to the Github repository for automatic CI/CD. Everything except `frontendconfig` and `backendconfig` need to be modified.
+### Manual
+These are the instructions we followed to create our deployment. Follow them if you would like to deploy from scratch.
+
 1. For frontend and backend, repeat the same steps. We will just describe the steps for the backend deployment.
 2. First, build the image: `docker buildx build -t doodly .`
 3. To push the image to Google Artifact Registery:
