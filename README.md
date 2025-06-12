@@ -28,7 +28,7 @@ npm install
 npm run dev
 ```
 
-### Production Depoyment
+### Production Deployment
 > TODO
 
 ## API Endpoints
