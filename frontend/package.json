@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:wasm": "cd wasm/bezier && wasm-pack build --target web"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
