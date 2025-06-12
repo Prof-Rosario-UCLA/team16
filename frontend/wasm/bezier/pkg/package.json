@@ -1,0 +1,15 @@
+{
+  "name": "bezier",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "bezier_bg.wasm",
+    "bezier.js",
+    "bezier.d.ts"
+  ],
+  "main": "bezier.js",
+  "types": "bezier.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
